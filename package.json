@@ -45,6 +45,18 @@
         "icon": "$(eye)"
       }
     ],
+    "configuration": {
+      "title": "Markdown Inline Editor",
+      "properties": {
+        "mdInline.headingLineHeight": {
+          "type": "string",
+          "default": "1.4",
+          "description": "CSS line-height applied to decorated headings (e.g. '1.4', '1.6em', '24px'). Set to empty string to disable.",
+          "pattern": "^$|^[0-9]+(\\.[0-9]+)?(em|rem|px|%)?$",
+          "patternErrorMessage": "Must be a valid CSS line-height value (e.g. '1.4', '1.6em', '24px') or empty string."
+        }
+      }
+    },
     "menus": {
       "editor/title": [
         {

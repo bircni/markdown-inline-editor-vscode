@@ -1,4 +1,4 @@
-import { Range, TextEditor, TextDocument, TextDocumentChangeEvent } from 'vscode';
+import { Range, TextEditor, TextDocument, TextDocumentChangeEvent, workspace } from 'vscode';
 import {
   HideDecorationType,
   BoldDecorationType,
@@ -19,6 +19,7 @@ import {
   BlockquoteDecorationType,
   ListItemDecorationType,
   HorizontalRuleDecorationType,
+  HeadingDecorationOptions,
 } from './decorations';
 import { MarkdownParser, DecorationRange, DecorationType } from './parser';
 
@@ -77,18 +78,110 @@ export class Decorator {
   private strikethroughDecorationType = StrikethroughDecorationType();
   private codeDecorationType = CodeDecorationType();
   private codeBlockDecorationType = CodeBlockDecorationType();
-  private headingDecorationType = HeadingDecorationType();
-  private heading1DecorationType = Heading1DecorationType();
-  private heading2DecorationType = Heading2DecorationType();
-  private heading3DecorationType = Heading3DecorationType();
-  private heading4DecorationType = Heading4DecorationType();
-  private heading5DecorationType = Heading5DecorationType();
-  private heading6DecorationType = Heading6DecorationType();
+  private headingDecorationType: any;
+  private heading1DecorationType: any;
+  private heading2DecorationType: any;
+  private heading3DecorationType: any;
+  private heading4DecorationType: any;
+  private heading5DecorationType: any;
+  private heading6DecorationType: any;
   private linkDecorationType = LinkDecorationType();
   private imageDecorationType = ImageDecorationType();
   private blockquoteDecorationType = BlockquoteDecorationType();
   private listItemDecorationType = ListItemDecorationType();
   private horizontalRuleDecorationType = HorizontalRuleDecorationType();
+
+  /** Mapping of decoration types to their VS Code decoration instances */
+  private decorationTypeMap!: Map<DecorationType, any>;
+
+  constructor() {
+    // Initialize heading decorations with config
+    this.recreateHeadingDecorations();
+    
+    // Initialize decoration type map after heading decorations are created
+    this.decorationTypeMap = new Map<DecorationType, any>([
+      ['hide', this.hideDecorationType],
+      ['bold', this.boldDecorationType],
+      ['italic', this.italicDecorationType],
+      ['boldItalic', this.boldItalicDecorationType],
+      ['strikethrough', this.strikethroughDecorationType],
+      ['code', this.codeDecorationType],
+      ['codeBlock', this.codeBlockDecorationType],
+      ['heading', this.headingDecorationType],
+      ['heading1', this.heading1DecorationType],
+      ['heading2', this.heading2DecorationType],
+      ['heading3', this.heading3DecorationType],
+      ['heading4', this.heading4DecorationType],
+      ['heading5', this.heading5DecorationType],
+      ['heading6', this.heading6DecorationType],
+      ['link', this.linkDecorationType],
+      ['image', this.imageDecorationType],
+      ['blockquote', this.blockquoteDecorationType],
+      ['listItem', this.listItemDecorationType],
+      ['horizontalRule', this.horizontalRuleDecorationType],
+    ]);
+  }
+
+  /**
+   * Reads the heading decoration configuration from settings.
+   */
+  private getHeadingDecorationOptions(): HeadingDecorationOptions {
+    const config = workspace.getConfiguration('mdInline');
+    const lineHeight = config.get<string>('headingLineHeight', '1.4');
+    
+    return {
+      lineHeight: lineHeight || undefined,
+    };
+  }
+
+  /**
+   * Recreates heading decoration types with current configuration.
+   * Disposes old decorations if they exist.
+   */
+  private recreateHeadingDecorations(): void {
+    const options = this.getHeadingDecorationOptions();
+
+    // Dispose old heading decorations
+    this.headingDecorationType?.dispose();
+    this.heading1DecorationType?.dispose();
+    this.heading2DecorationType?.dispose();
+    this.heading3DecorationType?.dispose();
+    this.heading4DecorationType?.dispose();
+    this.heading5DecorationType?.dispose();
+    this.heading6DecorationType?.dispose();
+
+    // Create new heading decorations with updated options
+    this.headingDecorationType = HeadingDecorationType(options);
+    this.heading1DecorationType = Heading1DecorationType(options);
+    this.heading2DecorationType = Heading2DecorationType(options);
+    this.heading3DecorationType = Heading3DecorationType(options);
+    this.heading4DecorationType = Heading4DecorationType(options);
+    this.heading5DecorationType = Heading5DecorationType(options);
+    this.heading6DecorationType = Heading6DecorationType(options);
+
+    // Update the decoration type map if it exists (it won't exist during constructor initialization)
+    // During constructor, the map is initialized with these values anyway, so we only update when
+    // called from handleConfigurationChange() after the map already exists
+    if (this.decorationTypeMap) {
+      this.decorationTypeMap.set('heading', this.headingDecorationType);
+      this.decorationTypeMap.set('heading1', this.heading1DecorationType);
+      this.decorationTypeMap.set('heading2', this.heading2DecorationType);
+      this.decorationTypeMap.set('heading3', this.heading3DecorationType);
+      this.decorationTypeMap.set('heading4', this.heading4DecorationType);
+      this.decorationTypeMap.set('heading5', this.heading5DecorationType);
+      this.decorationTypeMap.set('heading6', this.heading6DecorationType);
+    }
+  }
+
+  /**
+   * Handles configuration changes for heading decorations.
+   * Should be called when mdInline.headingLineHeight changes.
+   */
+  handleConfigurationChange(): void {
+    this.recreateHeadingDecorations();
+    // Reapply decorations immediately without parsing
+    this.updateDecorationsForSelection();
+  }
 
   /**
    * Sets the active text editor and immediately updates decorations.
@@ -419,29 +512,6 @@ export class Decorator {
     return filtered;
   }
 
-  /** Mapping of decoration types to their VS Code decoration instances */
-  private decorationTypeMap = new Map<DecorationType, any>([
-    ['hide', this.hideDecorationType],
-    ['bold', this.boldDecorationType],
-    ['italic', this.italicDecorationType],
-    ['boldItalic', this.boldItalicDecorationType],
-    ['strikethrough', this.strikethroughDecorationType],
-    ['code', this.codeDecorationType],
-    ['codeBlock', this.codeBlockDecorationType],
-    ['heading', this.headingDecorationType],
-    ['heading1', this.heading1DecorationType],
-    ['heading2', this.heading2DecorationType],
-    ['heading3', this.heading3DecorationType],
-    ['heading4', this.heading4DecorationType],
-    ['heading5', this.heading5DecorationType],
-    ['heading6', this.heading6DecorationType],
-    ['link', this.linkDecorationType],
-    ['image', this.imageDecorationType],
-    ['blockquote', this.blockquoteDecorationType],
-    ['listItem', this.listItemDecorationType],
-    ['horizontalRule', this.horizontalRuleDecorationType],
-  ]);
-
   /**
    * Applies filtered decorations to the editor.
    * 
@@ -453,9 +523,11 @@ export class Decorator {
       return;
     }
 
+
     // Apply all decorations by iterating through the type map
     for (const [type, decorationType] of this.decorationTypeMap.entries()) {
-      this.activeEditor.setDecorations(decorationType, filteredDecorations.get(type) || []);
+      const ranges = filteredDecorations.get(type) || [];
+      this.activeEditor.setDecorations(decorationType, ranges);
     }
   }
 

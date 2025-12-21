@@ -128,8 +128,38 @@ class MockTextEditor {
 
 export const TextEditor = MockTextEditor as any;
 
+// Mock configuration storage
+const mockConfigurations = new Map<string, Map<string, any>>();
+
+class MockWorkspaceConfiguration {
+  constructor(private section: string) {}
+
+  get<T>(key: string, defaultValue?: T): T {
+    const sectionConfig = mockConfigurations.get(this.section);
+    if (!sectionConfig || !sectionConfig.has(key)) {
+      return defaultValue as T;
+    }
+    return sectionConfig.get(key) as T;
+  }
+
+  update(key: string, value: any): void {
+    let sectionConfig = mockConfigurations.get(this.section);
+    if (!sectionConfig) {
+      sectionConfig = new Map();
+      mockConfigurations.set(this.section, sectionConfig);
+    }
+    sectionConfig.set(key, value);
+  }
+}
+
+// Captured decoration type options for testing
+export const capturedDecorationOptions: any[] = [];
+
 export const window = {
-  createTextEditorDecorationType: (_options: any) => ({}),
+  createTextEditorDecorationType: (options: any) => {
+    capturedDecorationOptions.push(options);
+    return { dispose: () => {} };
+  },
   activeTextEditor: undefined as any,
   onDidChangeActiveTextEditor: () => ({ dispose: () => {} }),
   onDidChangeTextEditorSelection: () => ({ dispose: () => {} }),
@@ -137,7 +167,25 @@ export const window = {
 
 export const workspace = {
   onDidChangeTextDocument: () => ({ dispose: () => {} }),
+  onDidChangeConfiguration: () => ({ dispose: () => {} }),
+  getConfiguration: (section?: string) => new MockWorkspaceConfiguration(section || ''),
 };
+
+// Helper to set mock configuration values for tests
+export function setMockConfiguration(section: string, key: string, value: any): void {
+  let sectionConfig = mockConfigurations.get(section);
+  if (!sectionConfig) {
+    sectionConfig = new Map();
+    mockConfigurations.set(section, sectionConfig);
+  }
+  sectionConfig.set(key, value);
+}
+
+// Helper to clear mock configurations between tests
+export function clearMockConfigurations(): void {
+  mockConfigurations.clear();
+  capturedDecorationOptions.length = 0;
+}
 
 export const ExtensionContext = class {
   subscriptions: Array<{ dispose: () => void }> = [];

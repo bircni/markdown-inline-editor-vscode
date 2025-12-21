@@ -94,9 +94,17 @@ export function activate(context: vscode.ExtensionContext) {
     }
   });
 
+  // Listen for configuration changes to heading line height
+  const changeConfiguration = vscode.workspace.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration('mdInline.headingLineHeight')) {
+      decorator.handleConfigurationChange();
+    }
+  });
+
   context.subscriptions.push(changeActiveTextEditor);
   context.subscriptions.push(changeTextEditorSelection);
   context.subscriptions.push(changeDocument);
+  context.subscriptions.push(changeConfiguration);
   context.subscriptions.push(linkProviderDisposable);
   context.subscriptions.push(toggleDecorationsCommand);
   context.subscriptions.push(navigateToAnchorCommand);

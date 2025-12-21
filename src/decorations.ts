@@ -1,4 +1,14 @@
 import { window, ThemeColor } from 'vscode';
+import { isDecorationLineHeightSupported } from './vscode-compat';
+
+export interface HeadingDecorationOptions {
+  /**
+   * CSS `line-height` value to apply to heading text.
+   *
+   * Example values: `"1.4"`, `"1.6em"`, `"24px"`.
+   */
+  lineHeight?: string;
+}
 
 /**
  * Creates a decoration type for hiding markdown syntax.
@@ -87,17 +97,6 @@ export function CodeBlockDecorationType() {
 }
 
 /**
- * Creates a decoration type for heading styling.
- * 
- * @returns {vscode.TextEditorDecorationType} A decoration type for headings
- */
-export function HeadingDecorationType() {
-  return window.createTextEditorDecorationType({
-    fontWeight: 'bold',
-  });
-}
-
-/**
  * Heading decoration configuration
  */
 const HEADING_CONFIG = [
@@ -110,27 +109,59 @@ const HEADING_CONFIG = [
 ];
 
 /**
- * Creates a heading decoration type with the specified level.
- * 
- * @param {number} level - Heading level (1-6)
- * @returns {vscode.TextEditorDecorationType} A decoration type for the heading level
+ * Builds the render options for the generic heading decoration.
+ * Exported for unit testing and for consistent option composition.
  */
-function createHeadingDecoration(level: number) {
-  const config = HEADING_CONFIG[level - 1];
-  if (!config) throw new Error(`Invalid heading level: ${level}`);
-  
-  return window.createTextEditorDecorationType({
-    textDecoration: `none; font-size: ${config.size};`,
-    ...(config.bold ? { fontWeight: 'bold' } : { color: new ThemeColor('descriptionForeground') }),
-  });
+export function getGenericHeadingDecorationRenderOptions(options?: HeadingDecorationOptions): Record<string, unknown> {
+  const base: Record<string, unknown> = {
+    fontWeight: 'bold',
+  };
+
+  const lineHeight = options?.lineHeight?.trim();
+  // Only set lineHeight if VS Code version supports it (>= 1.107.0)
+  if (lineHeight && isDecorationLineHeightSupported()) {
+    base.lineHeight = lineHeight;
+  }
+
+  return base;
 }
 
-export const Heading1DecorationType = () => createHeadingDecoration(1);
-export const Heading2DecorationType = () => createHeadingDecoration(2);
-export const Heading3DecorationType = () => createHeadingDecoration(3);
-export const Heading4DecorationType = () => createHeadingDecoration(4);
-export const Heading5DecorationType = () => createHeadingDecoration(5);
-export const Heading6DecorationType = () => createHeadingDecoration(6);
+export function HeadingDecorationType(options?: HeadingDecorationOptions) {
+  return window.createTextEditorDecorationType(getGenericHeadingDecorationRenderOptions(options) as any);
+}
+
+/**
+ * Builds the render options for a given heading level.
+ * Exported for unit testing and for consistent option composition.
+ */
+export function getHeadingDecorationRenderOptions(level: number, options?: HeadingDecorationOptions): Record<string, unknown> {
+  const config = HEADING_CONFIG[level - 1];
+  if (!config) throw new Error(`Invalid heading level: ${level}`);
+
+  const base: Record<string, unknown> = {
+    textDecoration: `none; font-size: ${config.size};`,
+    ...(config.bold ? { fontWeight: 'bold' } : { color: new ThemeColor('descriptionForeground') }),
+  };
+
+  const lineHeight = options?.lineHeight?.trim();
+  // Only set lineHeight if VS Code version supports it (>= 1.107.0)
+  if (lineHeight && isDecorationLineHeightSupported()) {
+    base.lineHeight = lineHeight;
+  }
+
+  return base;
+}
+
+function createHeadingDecoration(level: number, options?: HeadingDecorationOptions) {
+  return window.createTextEditorDecorationType(getHeadingDecorationRenderOptions(level, options) as any);
+}
+
+export const Heading1DecorationType = (options?: HeadingDecorationOptions) => createHeadingDecoration(1, options);
+export const Heading2DecorationType = (options?: HeadingDecorationOptions) => createHeadingDecoration(2, options);
+export const Heading3DecorationType = (options?: HeadingDecorationOptions) => createHeadingDecoration(3, options);
+export const Heading4DecorationType = (options?: HeadingDecorationOptions) => createHeadingDecoration(4, options);
+export const Heading5DecorationType = (options?: HeadingDecorationOptions) => createHeadingDecoration(5, options);
+export const Heading6DecorationType = (options?: HeadingDecorationOptions) => createHeadingDecoration(6, options);
 
 /**
  * Creates a decoration type for link styling.

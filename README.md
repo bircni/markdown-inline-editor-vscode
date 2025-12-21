@@ -89,11 +89,25 @@ Nested formatting fully supported (e.g., **bold *italic***).
 
 ## Configuration
 
-No setup needed—works out of the box. Auto-adapts to your VS Code theme.
+### Heading Line Height
+
+By default, headings use a line-height of `1.4` to prevent them from appearing "squeezed". You can customize this in VS Code settings:
+
+```json
+{
+  "mdInline.headingLineHeight": "1.4"  // unitless, em, px, etc.
+}
+```
+
+Set to an empty string to disable custom line-height and use editor defaults.
+
+### Other Settings
+
+No other configuration needed—works out of the box. Auto-adapts to your VS Code theme.
 
 ## Development
 
-**Prerequisites:** Node.js 20+, VS Code 1.88.0+
+**Prerequisites:** Node.js 20+, VS Code 1.107.0+
 
 ```bash
 git clone https://github.com/SeardnaSchmid/markdown-inline-editor-vscode.git
