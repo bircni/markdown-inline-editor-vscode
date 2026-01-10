@@ -18,13 +18,23 @@ const MATHJAX_ERROR_CSS = [
 
 /**
  * MathJax components (lazy-loaded)
+ * 
+ * Note: MathJax doesn't provide TypeScript definitions, so we use `any` types.
+ * These are initialized via require() at runtime in the VS Code extension context.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let mathjax: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let TeX: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let SVG: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let liteAdaptor: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let RegisterHTMLHandler: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let AllPackages: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let html: any;
 
 /**
@@ -38,11 +48,18 @@ function initializeMathJax(): void {
 
   try {
     // Load MathJax components using require (CommonJS)
+    // MathJax is a CommonJS module and must be loaded via require() in VS Code extension context
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     mathjax = require('mathjax-full/js/mathjax.js').mathjax;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     TeX = require('mathjax-full/js/input/tex.js').TeX;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     SVG = require('mathjax-full/js/output/svg.js').SVG;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     liteAdaptor = require('mathjax-full/js/adaptors/liteAdaptor.js').liteAdaptor;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     RegisterHTMLHandler = require('mathjax-full/js/handlers/html.js').RegisterHTMLHandler;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     AllPackages = require('mathjax-full/js/input/tex/AllPackages.js').AllPackages;
 
     // Set up MathJax

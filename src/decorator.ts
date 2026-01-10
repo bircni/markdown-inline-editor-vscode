@@ -695,8 +695,25 @@ export class Decorator {
                      window.activeColorTheme.kind === ColorThemeKind.HighContrast;
     
     // Get line height from editor configuration
-    // lineHeight might not be in TextEditorOptions, so we'll use a default or calculate from font size
-    const lineHeight = 20; // Default line height, can be improved later
+    // VS Code's editor.lineHeight can be:
+    // - A multiplier (e.g., 1.5) - multiplies font size
+    // - An absolute pixel value (e.g., 24) - used directly
+    // - 0 - auto-calculated (typically ~1.5x font size)
+    const editorConfig = workspace.getConfiguration('editor');
+    const fontSize = editorConfig.get<number>('fontSize', 14);
+    const lineHeightSetting = editorConfig.get<number>('lineHeight', 0);
+    
+    let lineHeight: number;
+    if (lineHeightSetting === 0) {
+      // Auto: use default multiplier of 1.5
+      lineHeight = Math.round(fontSize * 1.5);
+    } else if (lineHeightSetting >= 10) {
+      // Absolute pixel value (>= 10 is treated as pixels)
+      lineHeight = Math.round(lineHeightSetting);
+    } else {
+      // Multiplier (< 10 and > 0)
+      lineHeight = Math.round(fontSize * lineHeightSetting);
+    }
     
     // Process math decorations
     const mathRanges = filteredDecorations.get('math') || [];
@@ -709,7 +726,8 @@ export class Decorator {
     // Process block math
     for (const range of mathRanges) {
       const latexText = document.getText(range);
-      const match = /^(\$+)([^]+)\1/.exec(latexText);
+      // Match dollar sign delimiters and content (using [\s\S] to match any character including newlines)
+      const match = /^(\$+)([\s\S]+?)\1/.exec(latexText);
       if (!match) continue;
 
       const latexContent = match[2];
@@ -725,11 +743,14 @@ export class Decorator {
     // Process inline math
     for (const range of inlineMathRanges) {
       const latexText = document.getText(range);
-      const match = /^(\$+)([^]+)\1/.exec(latexText);
+      // Match dollar sign delimiters and content (using [\s\S] to match any character including newlines)
+      const match = /^(\$+)([\s\S]+?)\1/.exec(latexText);
       if (!match) continue;
 
       const latexContent = match[2];
-      const height = lineHeight;
+      // Inline math should match text x-height (font size), not line height
+      // Use font size with slight scaling (1.2x) to account for superscripts/subscripts and improve readability
+      const height = Math.round(fontSize * 1.2);
 
       const decoration = this.getTexDecoration(latexContent, false, height, darkMode);
       const ranges = inlineMathDecorationMap.get(decoration) || [];
@@ -938,6 +959,19 @@ export class Decorator {
     if (this.activeEditor && this.isMarkdownDocument()) {
       this.updateDecorationsForSelection();
     }
+  }
+
+  /**
+   * Clears the math decoration cache and forces recalculation on next render.
+   * Called when font size or line height changes.
+   */
+  clearMathDecorationCache(): void {
+    // Dispose all cached math decorations
+    for (const decorationType of this.mathDecorationCache.values()) {
+      decorationType.dispose();
+    }
+    this.mathDecorationCache.clear();
+    this.activeMathDecorations.clear();
   }
 
   /**

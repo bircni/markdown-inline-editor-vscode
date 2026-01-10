@@ -134,6 +134,12 @@ export function activate(context: vscode.ExtensionContext) {
         decorator.updateDecorationsForSelection();
       }
     }
+    
+    // Recalculate math decorations when font size or line height changes
+    if (event.affectsConfiguration('editor.fontSize') || event.affectsConfiguration('editor.lineHeight')) {
+      decorator.clearMathDecorationCache();
+      decorator.updateDecorationsForSelection();
+    }
   });
 
   // Listen for theme changes to update code decoration colors
