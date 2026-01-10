@@ -510,6 +510,9 @@ export class MarkdownParser {
 
   /**
    * Processes a code block node.
+   * 
+   * Special handling: If the code block has language "math", it's treated as a math block
+   * and rendered using LaTeX rendering instead of code block styling.
    */
   private processCodeBlock(
     node: Code,
@@ -519,7 +522,12 @@ export class MarkdownParser {
     if (!this.hasValidPosition(node)) return;
 
     const start = node.position!.start.offset!;
-    const end = node.position!.end.offset!
+    const end = node.position!.end.offset!;
+
+    // Check if this is a math code block (```math ... ```)
+    // In mdast, Code nodes have a 'lang' property for the language identifier
+    const codeNode = node as Code & { lang?: string | null };
+    const isMathCodeBlock = codeNode.lang === 'math';
 
     // Find opening fence (```)
     const fenceStart = text.indexOf('```', start);
@@ -540,27 +548,56 @@ export class MarkdownParser {
     const closingLineEnd = text.indexOf('\n', closingFence);
     const closingEnd = closingLineEnd !== -1 ? closingLineEnd + 1 : end;
 
-    // Apply code block background to the entire block including fence lines
-    // but NOT including the newline after the closing fence
-    decorations.push({
-      startPos: fenceStart,
-      endPos: closingFenceEnd,
-      type: 'codeBlock',
-    });
+    if (isMathCodeBlock) {
+      // For math code blocks, treat the content as block math
+      // Extract the math content (between opening line end and closing fence)
+      const mathContentStart = openingEnd;
+      const mathContentEnd = closingFence;
+      
+      // Hide the opening fence line (```math and newline)
+      decorations.push({
+        startPos: fenceStart,
+        endPos: openingEnd,
+        type: 'hide',
+      });
 
-    // Hide the opening fence line (```, language identifier, and newline)
-    decorations.push({
-      startPos: fenceStart,
-      endPos: openingEnd,
-      type: 'hide',
-    });
+      // Hide the closing fence line (``` and newline if present)
+      decorations.push({
+        startPos: closingFence,
+        endPos: closingEnd,
+        type: 'hide',
+      });
 
-    // Hide the closing fence line (```, and newline if present)
-    decorations.push({
-      startPos: closingFence,
-      endPos: closingEnd,
-      type: 'hide',
-    });
+      // Create a math decoration for the content (display mode)
+      decorations.push({
+        startPos: mathContentStart,
+        endPos: mathContentEnd,
+        type: 'math',
+      });
+    } else {
+      // Regular code block handling
+      // Apply code block background to the entire block including fence lines
+      // but NOT including the newline after the closing fence
+      decorations.push({
+        startPos: fenceStart,
+        endPos: closingFenceEnd,
+        type: 'codeBlock',
+      });
+
+      // Hide the opening fence line (```, language identifier, and newline)
+      decorations.push({
+        startPos: fenceStart,
+        endPos: openingEnd,
+        type: 'hide',
+      });
+
+      // Hide the closing fence line (```, and newline if present)
+      decorations.push({
+        startPos: closingFence,
+        endPos: closingEnd,
+        type: 'hide',
+      });
+    }
   }
 
   /**

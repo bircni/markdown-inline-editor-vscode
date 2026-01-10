@@ -727,10 +727,20 @@ export class Decorator {
     for (const range of mathRanges) {
       const latexText = document.getText(range);
       // Match dollar sign delimiters and content (using [\s\S] to match any character including newlines)
+      // For code blocks with language "math", there are no dollar signs, so the entire text is the content
       const match = /^(\$+)([\s\S]+?)\1/.exec(latexText);
-      if (!match) continue;
+      
+      let latexContent: string;
+      if (match) {
+        // Block math with $$ delimiters
+        latexContent = match[2];
+      } else {
+        // Code block with language "math" - no delimiters, content is the entire text
+        latexContent = latexText.trim();
+      }
 
-      const latexContent = match[2];
+      if (!latexContent) continue;
+
       const numLines = 1 + (latexText.match(/\n/g) || []).length;
       const height = numLines * lineHeight;
 

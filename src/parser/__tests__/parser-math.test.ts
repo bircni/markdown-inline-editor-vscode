@@ -182,4 +182,43 @@ describe('MarkdownParser - Math', () => {
       });
     });
   });
+
+  describe('code blocks with language math', () => {
+    it('should detect code block with language math', async () => {
+      const markdown = '```math\nE = mc^2\n```';
+      const result = parser.extractDecorations(markdown);
+      
+      const mathDec = result.find((d: DecorationRange) => d.type === 'math');
+      expect(mathDec).toBeDefined();
+      expect(mathDec?.startPos).toBeGreaterThan(0);
+      expect(mathDec?.endPos).toBeLessThan(markdown.length);
+    });
+
+    it('should hide fence markers for math code blocks', async () => {
+      const markdown = '```math\nx = y\n```';
+      const result = parser.extractDecorations(markdown);
+      
+      const hideDecs = result.filter((d: DecorationRange) => d.type === 'hide');
+      expect(hideDecs.length).toBeGreaterThanOrEqual(2); // Opening and closing fences
+    });
+
+    it('should handle multi-line math in code blocks', async () => {
+      const markdown = '```math\n\\begin{align}\nx &= y\n\\end{align}\n```';
+      const result = parser.extractDecorations(markdown);
+      
+      const mathDec = result.find((d: DecorationRange) => d.type === 'math');
+      expect(mathDec).toBeDefined();
+    });
+
+    it('should not treat regular code blocks as math', async () => {
+      const markdown = '```javascript\nconsole.log("test");\n```';
+      const result = parser.extractDecorations(markdown);
+      
+      const mathDecs = result.filter((d: DecorationRange) => d.type === 'math');
+      expect(mathDecs.length).toBe(0);
+      
+      const codeBlockDecs = result.filter((d: DecorationRange) => d.type === 'codeBlock');
+      expect(codeBlockDecs.length).toBeGreaterThan(0);
+    });
+  });
 });
