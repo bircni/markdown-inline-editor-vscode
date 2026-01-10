@@ -1243,6 +1243,8 @@ export class MarkdownParser {
   /**
    * Processes an inlineMath (inline math) node.
    * Handles $...$ syntax for inline math expressions.
+   * Note: remark-math may classify $$...$$ as inlineMath, so we check for double dollar signs
+   * and treat them as block math instead.
    */
   private processInlineMath(
     node: InlineMath,
@@ -1259,15 +1261,20 @@ export class MarkdownParser {
     const match = /^(\$+)([^]+)\1/.exec(latexText);
     if (!match) return;
 
+    // Check if this is actually block math ($$...$$) that remark-math classified as inline
+    // If the delimiter has 2 or more dollar signs, treat it as block math
+    const delimiterLength = match[1].length;
+    const isBlockMath = delimiterLength >= 2;
+
     // Extract LaTeX content (delimiterLength and latexContent extracted but not used here)
     // The decorator will extract and use them when rendering
 
-    // Create decoration range for the entire inline math expression
-    // The decorator will handle rendering the SVG
+    // Create decoration range for the math expression
+    // Use 'math' type for block math ($$...$$), 'inlineMath' for single $...$
     decorations.push({
       startPos: start,
       endPos: end,
-      type: 'inlineMath',
+      type: isBlockMath ? 'math' : 'inlineMath',
     });
   }
 

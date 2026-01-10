@@ -1,5 +1,5 @@
 ---
-status: TODO
+status: IMPLEMENTED
 githubIssue: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/20
 updateDate: 2026-01-09
 priority: High
@@ -9,34 +9,45 @@ priority: High
 
 ## Overview
 
-Add a configuration setting to show raw markdown syntax when viewing diffs, allowing users to see markdown changes more clearly in both source control view and Copilot inline diffs.
+✅ **Implemented** - Configuration settings to show raw markdown syntax when viewing diffs, allowing users to see markdown changes more clearly in both source control view and Copilot inline diffs.
 
 ## Implementation
 
-Add VS Code configuration option `markdownInlineEditor.showRawInDiffs` (boolean, default: `true`) that detects when editor is in diff mode and shows raw markdown syntax instead of rendered decorations.
+**Configuration Settings:**
+- `markdownInlineEditor.defaultBehaviors.diffView.applyDecorations` (boolean, default: `false`)
+  - Controls whether decorations are applied in diff views
+  - When `false` (default), raw markdown syntax is shown in diff views
+  - When `true`, decorations are applied in diff views
+  
+- `markdownInlineEditor.defaultBehaviors.editor.applyDecorations` (boolean, default: `true`)
+  - Controls whether decorations are applied in regular editor views
+  - When `true` (default), decorations are applied normally
+  - When `false`, raw markdown syntax is shown
 
 **Diff Detection:**
-- Check if active editor is a diff editor using `vscode.window.activeTextEditor` and `DiffEditor` type
-- Detect diff context via `TextDocument.uri.scheme === 'git'` or similar diff schemes
-- Listen for editor changes to update decoration state when switching between diff and normal views
+- ✅ Automatically detects diff editors using VS Code's editor API
+- ✅ Detects diff context via URI scheme detection
+- ✅ Listens for editor changes to update decoration state when switching between diff and normal views
 
 **Scope:**
-- Source control diff view (Git, SVN, etc.)
-- Copilot inline diffs
-- Any VS Code diff editor context
+- ✅ Source control diff view (Git, SVN, etc.)
+- ✅ Copilot inline diffs
+- ✅ VS Code merge editor
+- ✅ Any VS Code diff editor context
 
 **Behavior:**
-- When setting is enabled and diff is detected, show raw markdown syntax (skip decoration application)
-- When setting is disabled or in normal editor, apply decorations as usual
-- Setting change should immediately update active editors
+- ✅ When `diffView.applyDecorations` is `false` (default) and diff is detected, raw markdown syntax is shown (decorations skipped)
+- ✅ When `diffView.applyDecorations` is `true`, decorations are applied in diff views
+- ✅ When `editor.applyDecorations` is `true` (default), decorations are applied in normal editors
+- ✅ Setting changes immediately update active editors
 
 ### Affected Components
 
 **Code Modules:**
-- `src/extension.ts` - Configuration reading and change listeners
-- `src/decorator.ts` - Diff detection and decoration skipping logic
-- `src/link-provider.ts` - May need diff-aware behavior (optional)
-- `package.json` - Configuration contribution
+- ✅ `src/extension.ts` - Configuration reading and change listeners
+- ✅ `src/decorator.ts` - Diff detection and decoration skipping logic
+- ✅ `src/link-provider.ts` - Diff-aware behavior implemented
+- ✅ `package.json` - Configuration contribution
 
 **Systems & Features:**
 - VS Code configuration system (`workspace.getConfiguration`, `onDidChangeConfiguration`)
@@ -116,17 +127,13 @@ Feature: Show raw markdown in diffs edge cases
 
 ## Notes
 
-- High user demand - makes reviewing markdown changes much easier
-- Problem: Rendered markdown can obscure actual changes (e.g., heading level changes like `##` to `###` look like removals)
-- Solution: Configuration option to show raw markdown syntax in diff contexts
-- Affects both source control view and Copilot inline diffs
-- Users can currently work around by clicking the line, but it's inconvenient
-- Feasibility: High
-- Usefulness: High
-- Risk: Low (optional setting, doesn't break existing behavior)
-- Effort: 1-2 weeks
-- VS Code API: Use `vscode.window.activeTextEditor` and check for diff editor type or URI scheme
-- Default behavior: Show raw markdown in diff views by default (default: `true`), users can opt-out if desired
+- ✅ **Implemented in v1.6.0** - Makes reviewing markdown changes much easier
+- ✅ Problem solved: Rendered markdown no longer obscures actual changes (e.g., heading level changes like `##` to `###` are now clearly visible)
+- ✅ Solution: Hierarchical configuration structure with separate settings for diff view and editor
+- ✅ Affects both source control view and Copilot inline diffs
+- ✅ Default behavior: Raw markdown shown in diff views by default (`diffView.applyDecorations: false`)
+- ✅ Users can opt-in to decorations in diff views by setting `diffView.applyDecorations: true`
+- ✅ Settings organized into `defaultBehaviors` hierarchy for better organization
 
 ## Examples
 
@@ -146,7 +153,14 @@ Raw markdown visible: `##` → `###` change is clear
 **Configuration:**
 ```json
 {
-  "markdownInlineEditor.showRawInDiffs": true
+  "markdownInlineEditor.defaultBehaviors": {
+    "diffView": {
+      "applyDecorations": false  // Show raw markdown in diffs (default)
+    },
+    "editor": {
+      "applyDecorations": true    // Apply decorations in normal editor (default)
+    }
+  }
 }
 ```
 

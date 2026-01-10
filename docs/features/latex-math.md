@@ -1,18 +1,28 @@
 ---
-status: TODO
-updateDate: 2024-12-19
+status: IMPLEMENTED
+updateDate: 2026-01-10
 priority: High
+githubIssue: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/6
 ---
 
 # LaTeX/Math
 
 ## Overview
 
-Hover preview for rendered LaTeX/math formulas using inline and block math syntax.
+Inline rendering of LaTeX/math formulas using MathJax. Supports both inline (`$...$`) and block (`$$...$$`) math syntax. Math formulas are rendered as SVG and displayed inline in the editor, with syntax markers hidden.
 
 ## Implementation
 
-Detect `$...$` (inline) and `$$...$$` (block) math, render on hover using hover provider (better than markless inline approach).
+- **Parser**: Uses `remark-math` to detect inline (`$...$`) and block (`$$...$$`) math expressions
+- **Rendering**: MathJax converts LaTeX to SVG with proper scaling for inline vs block math
+- **Display**: SVG decorations replace the original text, with syntax markers hidden
+- **Reveal**: Selecting math expressions reveals the raw Markdown syntax for editing
+- **Code blocks**: Also supports ` ```math ` code blocks for block math rendering
+
+**Key Components:**
+- `src/parser.ts` - Math node detection and position mapping
+- `src/math-renderer.ts` - MathJax-based LaTeX to SVG conversion
+- `src/decorator.ts` - SVG decoration application with memoization
 
 ## Acceptance Criteria
 
@@ -23,7 +33,8 @@ Feature: Inline math formatting
   Scenario: Basic inline math
     When I type $E = mc^2$
     Then the math is detected
-    And hover shows rendered formula
+    And rendered formula appears inline
+    And syntax markers are hidden
 
   Scenario: Inline math in paragraph
     When I type "The equation $x = y$ is true"
@@ -40,7 +51,8 @@ Feature: Block math formatting
     And I type \int_0^\infty e^{-x^2} dx
     And I type $$
     Then the math is detected
-    And hover shows rendered formula
+    And rendered formula appears inline
+    And syntax markers are hidden
 
   Scenario: Multi-line block math
     When I type $$
@@ -79,18 +91,32 @@ Feature: Reveal math
 
 ## Notes
 
-- Essential for academic/technical users
-- Competitive requirement (markless has it but buggy)
-- Hover approach avoids markless bugs
-- Better performance than inline rendering
-- Simpler and more reliable than inline approach
-- Feasibility: Moderate
-- Usefulness: High
-- Risk: Medium (rendering complexity)
-- Effort: 2-3 weeks
-- Math rendering solution required (to be determined)
+- ✅ **Implemented** - Full support for inline and block math
+- Uses MathJax for LaTeX rendering (industry standard)
+- SVG-based rendering with proper scaling
+- Memoization cache for performance
+- Theme-aware (dark mode support via CSS filter inversion)
+- Handles edge cases: escaped dollar signs, empty expressions, whitespace-only math
+- Code blocks with `math` language are also supported
 
 ## Examples
 
-- Inline math: `$E = mc^2$` → Hover to see rendered formula
-- Block math: `$$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$` → Hover to see rendered formula
+- **Inline math**: `$E = mc^2$` → Rendered formula appears inline, syntax hidden
+- **Block math**: `$$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$` → Rendered formula appears inline, syntax hidden
+- **Code block math**: 
+  ````markdown
+  ```math
+  \begin{align}
+  x &= y \\
+  z &= w
+  \end{align}
+  ```
+  ````
+  → Rendered as block math, fence markers hidden
+
+## Technical Details
+
+- **MathJax Version**: Uses MathJax full package with TeX input and SVG output
+- **Performance**: Memoization cache prevents re-rendering identical expressions
+- **Scaling**: Inline math scales to font size, block math scales to line height
+- **Error Handling**: Invalid LaTeX shows error message in SVG

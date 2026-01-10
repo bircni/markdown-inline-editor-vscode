@@ -57,7 +57,7 @@ Enhance your Markdown workflow with these complementary extensions:
 
 ## Supported Features
 
-The extension currently supports **13 markdown features** with syntax hiding. Formatting appears inline while syntax markers stay hidden—click any text to reveal and edit raw Markdown.
+The extension currently supports **15 markdown features** with syntax hiding. Formatting appears inline while syntax markers stay hidden—click any text to reveal and edit raw Markdown.
 
 ### Text Formatting
 * [x] **Bold** (`**text**`) • [Details](docs/features/bold.md)
@@ -81,21 +81,20 @@ The extension currently supports **13 markdown features** with syntax hiding. Fo
 * [x] **Code Blocks** (`` ```lang ``) • [Details](docs/features/code-blocks.md)
 * [x] **YAML Frontmatter** • [Details](docs/features/yaml-frontmatter.md) • [Issue #27](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/27)
 
+### Math
+* [x] **LaTeX/Math** (`$...$` inline, `$$...$$` block) • [Details](docs/features/latex-math.md) • [Issue #6](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/6)
+
 ### Configuration
 * [x] **Show Raw Markdown in Diffs** • [Details](docs/features/show-raw-markdown-in-diffs.md) • [Issue #20](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/20)
 * [x] **Show Raw Markdown in Editor** • [Details](docs/features/show-raw-markdown-in-editor.md)
 
 ## Upcoming Features
 
-### Work in progress
-* [ ] **Set Default Feature Activation** – Allow users to configure which Markdown features are decorated/enabled by default (e.g., selectively apply decorators for headings, bold, italic, etc.) • [Details](docs/features/default-feature-activation.md)
-
 ### High Priority
 * [ ] **Tables** • [Details](docs/features/tables.md) • [Issue #23](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/23)
 * [ ] **Autolinks** • [Details](docs/features/autolinks.md) • [Issue #24](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/24)
 * [ ] **Mermaid Diagrams** • [Details](docs/features/mermaid-diagrams.md) • [Issue #26](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/26)
-* [ ] **LaTeX/Math** • [Details](docs/features/latex-math.md) • [Issue #6](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/6)
-
+* [ ] **Set Default Feature Activation** – Allow users to configure which Markdown features are decorated/enabled by default (e.g., selectively apply decorators for headings, bold, italic, etc.) • [Details](docs/features/default-feature-activation.md)
 ### Medium Priority
 * [ ] **Per-File Toggle State** • [Details](docs/features/per-file-toggle-state.md) • [Issue #28](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/28)
 * [ ] **Column alignment in tables with markup** • [Details](docs/features/table-column-alignment.md) • [Issue #21](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/21)
@@ -226,7 +225,6 @@ See [`CONTRIBUTING.md`](CONTRIBUTING.md) for full contribution guidelines and [`
 - **Ordered lists** – Currently displayed as-is (auto-numbering planned)
 - **Tables** – Table syntax hiding is in progress
 - **Mermaid diagrams** – Diagram rendering is in progress
-- **Math formulas** – KaTeX/MathJax support is planned
 - **H1 heading clipping** – Text goes out of window when H1 is on first line – [#4](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/4)
 
 ### Reporting Bugs

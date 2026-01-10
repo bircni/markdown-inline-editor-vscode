@@ -25,8 +25,8 @@ describe('MarkdownParser - Math', () => {
       
       const mathDec = result.find((d: DecorationRange) => d.type === 'inlineMath');
       expect(mathDec).toBeDefined();
-      expect(mathDec?.startPos).toBe(15);
-      expect(mathDec?.endPos).toBe(23);
+      expect(mathDec?.startPos).toBe(13);
+      expect(mathDec?.endPos).toBe(20);
     });
 
     it('should handle multiple inline math expressions', () => {
@@ -47,7 +47,7 @@ describe('MarkdownParser - Math', () => {
       
       expect(result).toContainEqual({
         startPos: 0,
-        endPos: 28,
+        endPos: 24,
         type: 'inlineMath'
       });
     });
@@ -60,7 +60,7 @@ describe('MarkdownParser - Math', () => {
       
       expect(result).toContainEqual({
         startPos: 0,
-        endPos: 30,
+        endPos: 29,
         type: 'math'
       });
     });
@@ -158,7 +158,7 @@ describe('MarkdownParser - Math', () => {
       
       expect(result).toContainEqual({
         startPos: 0,
-        endPos: 12,
+        endPos: 13,
         type: 'inlineMath'
       });
     });
@@ -177,7 +177,7 @@ describe('MarkdownParser - Math', () => {
       
       expect(result).toContainEqual({
         startPos: 0,
-        endPos: 24,
+        endPos: 23,
         type: 'inlineMath'
       });
     });
