@@ -1,4 +1,4 @@
-import { Range, TextEditor, TextDocument, TextDocumentChangeEvent, workspace, window, Position, WorkspaceEdit, Selection, TextEditorSelectionChangeKind, TextEditorDecorationType } from 'vscode';
+import { Range, TextEditor, TextDocument, TextDocumentChangeEvent, workspace, window, Position, WorkspaceEdit, Selection, TextEditorSelectionChangeKind, TextEditorDecorationType, ColorThemeKind } from 'vscode';
 import {
   HideDecorationType,
   TransparentDecorationType,
@@ -24,9 +24,11 @@ import {
   CheckboxUncheckedDecorationType,
   CheckboxCheckedDecorationType,
   FrontmatterDecorationType,
+  getSvgDecoration,
 } from './decorations';
 import { MarkdownParser, DecorationRange, DecorationType } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
+import { texToSvg, svgToUri } from './math-renderer';
 
 /**
  * Performance and caching constants.
@@ -84,6 +86,12 @@ export class Decorator {
 
   /** requestIdleCallback handle for idle updates */
   private idleCallbackHandle: number | undefined;
+
+  /** Memoization cache for math decorations (key: LaTeX string + display mode + height) */
+  private mathDecorationCache = new Map<string, TextEditorDecorationType>();
+
+  /** Track currently active math decoration types (to clear stale ones) */
+  private activeMathDecorations = new Set<TextEditorDecorationType>();
 
   /** Whether decorations are enabled or disabled */
   private decorationsEnabled = true;
@@ -665,7 +673,118 @@ export class Decorator {
     // Apply all decorations by iterating through the type map
     for (const [type, decorationType] of this.decorationTypeMap.entries()) {
       this.activeEditor.setDecorations(decorationType, filteredDecorations.get(type) || []);
-    };
+    }
+
+    // Handle math decorations separately (need to render LaTeX to SVG)
+    this.applyMathDecorations(filteredDecorations);
+  }
+
+  /**
+   * Applies math decorations by rendering LaTeX to SVG.
+   * 
+   * @private
+   * @param {Map<DecorationType, Range[]>} filteredDecorations - Decorations grouped by type
+   */
+  private applyMathDecorations(filteredDecorations: Map<DecorationType, Range[]>) {
+    if (!this.activeEditor) {
+      return;
+    }
+
+    const document = this.activeEditor.document;
+    const darkMode = window.activeColorTheme.kind === ColorThemeKind.Dark || 
+                     window.activeColorTheme.kind === ColorThemeKind.HighContrast;
+    
+    // Get line height from editor configuration
+    // lineHeight might not be in TextEditorOptions, so we'll use a default or calculate from font size
+    const lineHeight = 20; // Default line height, can be improved later
+    
+    // Process math decorations
+    const mathRanges = filteredDecorations.get('math') || [];
+    const inlineMathRanges = filteredDecorations.get('inlineMath') || [];
+
+    // Group math decorations by their rendered SVG (memoization)
+    const mathDecorationMap = new Map<TextEditorDecorationType, Range[]>();
+    const inlineMathDecorationMap = new Map<TextEditorDecorationType, Range[]>();
+
+    // Process block math
+    for (const range of mathRanges) {
+      const latexText = document.getText(range);
+      const match = /^(\$+)([^]+)\1/.exec(latexText);
+      if (!match) continue;
+
+      const latexContent = match[2];
+      const numLines = 1 + (latexText.match(/\n/g) || []).length;
+      const height = numLines * lineHeight;
+
+      const decoration = this.getTexDecoration(latexContent, true, height, darkMode);
+      const ranges = mathDecorationMap.get(decoration) || [];
+      ranges.push(range);
+      mathDecorationMap.set(decoration, ranges);
+    }
+
+    // Process inline math
+    for (const range of inlineMathRanges) {
+      const latexText = document.getText(range);
+      const match = /^(\$+)([^]+)\1/.exec(latexText);
+      if (!match) continue;
+
+      const latexContent = match[2];
+      const height = lineHeight;
+
+      const decoration = this.getTexDecoration(latexContent, false, height, darkMode);
+      const ranges = inlineMathDecorationMap.get(decoration) || [];
+      ranges.push(range);
+      inlineMathDecorationMap.set(decoration, ranges);
+    }
+
+    // Clear all previously active math decorations
+    for (const decoration of this.activeMathDecorations) {
+      this.activeEditor.setDecorations(decoration, []);
+    }
+    this.activeMathDecorations.clear();
+
+    // Apply all math decorations and track active ones
+    for (const [decoration, ranges] of mathDecorationMap.entries()) {
+      this.activeEditor.setDecorations(decoration, ranges);
+      this.activeMathDecorations.add(decoration);
+    }
+    for (const [decoration, ranges] of inlineMathDecorationMap.entries()) {
+      this.activeEditor.setDecorations(decoration, ranges);
+      this.activeMathDecorations.add(decoration);
+    }
+  }
+
+  /**
+   * Gets or creates a memoized decoration for LaTeX math.
+   * 
+   * @private
+   * @param texString - LaTeX content (without delimiters)
+   * @param display - Whether this is display (block) math
+   * @param height - Target height in pixels
+   * @param darkMode - Whether dark mode is active
+   * @returns TextEditorDecorationType for this math expression
+   */
+  private getTexDecoration(texString: string, display: boolean, height: number, darkMode: boolean): TextEditorDecorationType {
+    // Create cache key: LaTeX string + display mode + height + dark mode
+    const cacheKey = `${texString}|${display}|${height}|${darkMode}`;
+
+    // Check cache
+    const cached = this.mathDecorationCache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Render LaTeX to SVG
+    const svg = texToSvg(texString, display, height);
+    const svgUri = svgToUri(svg);
+    
+    // Create decoration
+    const decoration = getSvgDecoration(svgUri, darkMode);
+    
+    // Cache it
+    this.mathDecorationCache.set(cacheKey, decoration);
+    
+    return decoration;
   }
 
   /**
@@ -840,6 +959,12 @@ export class Decorator {
     for (const decorationType of this.decorationTypeMap.values()) {
       decorationType.dispose();
     }
+
+    // Dispose math decorations
+    for (const decorationType of this.mathDecorationCache.values()) {
+      decorationType.dispose();
+    }
+    this.mathDecorationCache.clear();
   }
 
   /**

@@ -1,4 +1,4 @@
-import { window, ThemeColor, ColorThemeKind } from 'vscode';
+import { window, ThemeColor, ColorThemeKind, Uri } from 'vscode';
 
 /**
  * Opacity value for brightness adjustment overlays.
@@ -336,6 +336,27 @@ export function CheckboxCheckedDecorationType() {
       contentText: '☑',
       fontWeight: 'bold',
       color: new ThemeColor('editor.foreground'),
+    },
+  });
+}
+
+/**
+ * Creates a decoration type for displaying SVG content (e.g., rendered LaTeX math).
+ * 
+ * Makes the original text transparent and displays the SVG as an icon before it.
+ * Supports dark mode via CSS filter inversion.
+ * 
+ * @param svgUri - Data URI of the SVG (e.g., data:image/svg+xml;base64,...)
+ * @param darkMode - Whether the current theme is dark (applies invert filter)
+ * @returns A decoration type that displays the SVG icon
+ */
+export function getSvgDecoration(svgUri: string, darkMode: boolean) {
+  return window.createTextEditorDecorationType({
+    color: 'transparent',
+    textDecoration: 'none; display: inline-block; width: 0;',
+    before: {
+      contentIconPath: Uri.parse(svgUri),
+      textDecoration: `none;${darkMode ? ' filter: invert(1)' : ''}`,
     },
   });
 }

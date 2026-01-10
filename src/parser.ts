@@ -1,4 +1,15 @@
 import type { Root, Node, Strong, Emphasis, Heading, InlineCode, Code, Link, Image, Delete, Blockquote, ListItem, ThematicBreak } from 'mdast';
+
+// Math node types from remark-math (extended mdast types)
+interface Math extends Node {
+  type: 'math';
+  value: string;
+}
+
+interface InlineMath extends Node {
+  type: 'inlineMath';
+  value: string;
+}
 import { getRemarkProcessorSync, getRemarkProcessor } from './parser-remark';
 
 /**
@@ -44,7 +55,9 @@ export type DecorationType =
   | 'checkboxUnchecked'
   | 'checkboxChecked'
   | 'horizontalRule'
-  | 'frontmatter';
+  | 'frontmatter'
+  | 'math'
+  | 'inlineMath';
 
 /**
  * Type for the unified processor used to parse markdown text to a Root AST node.
@@ -89,11 +102,12 @@ export class MarkdownParser {
   private visit: VisitFunction;
 
   constructor() {
-    const { unified, remarkParse, remarkGfm, visit } = getRemarkProcessorSync();
+    const { unified, remarkParse, remarkGfm, remarkMath, visit } = getRemarkProcessorSync();
     this.visit = visit;
     this.processor = unified()
       .use(remarkParse)
-      .use(remarkGfm);
+      .use(remarkGfm)
+      .use(remarkMath);
   }
 
   /**
@@ -104,11 +118,12 @@ export class MarkdownParser {
    */
   static async create(): Promise<MarkdownParser> {
     const parser = Object.create(MarkdownParser.prototype);
-    const { unified, remarkParse, remarkGfm, visit } = await getRemarkProcessor();
+    const { unified, remarkParse, remarkGfm, remarkMath, visit } = await getRemarkProcessor();
     parser.visit = visit;
     parser.processor = unified()
       .use(remarkParse)
-      .use(remarkGfm);
+      .use(remarkGfm)
+      .use(remarkMath);
     return parser;
   }
 
@@ -238,6 +253,14 @@ export class MarkdownParser {
 
           case 'thematicBreak':
             this.processThematicBreak(node as ThematicBreak, text, decorations);
+            break;
+
+          case 'math':
+            this.processMath(node as Math, text, decorations);
+            break;
+
+          case 'inlineMath':
+            this.processInlineMath(node as InlineMath, text, decorations);
             break;
         }
       } catch (error) {
@@ -1147,6 +1170,68 @@ export class MarkdownParser {
     }
 
     // No closing delimiter found - not valid frontmatter, don't apply decoration
+  }
+
+  /**
+   * Processes a math (block math) node.
+   * Handles $$...$$ syntax for block math expressions.
+   */
+  private processMath(
+    node: Math,
+    text: string,
+    decorations: DecorationRange[]
+  ): void {
+    if (!this.hasValidPosition(node)) return;
+
+    const start = node.position!.start.offset!;
+    const end = node.position!.end.offset!;
+
+    // Extract LaTeX content using regex to match delimiters and content
+    const latexText = text.slice(start, end);
+    const match = /^(\$+)([^]+)\1/.exec(latexText);
+    if (!match) return;
+
+    // Extract LaTeX content (delimiterLength and latexContent extracted but not used here)
+    // The decorator will extract and use them when rendering
+
+    // Create decoration range for the entire math expression
+    // The decorator will handle rendering the SVG
+    decorations.push({
+      startPos: start,
+      endPos: end,
+      type: 'math',
+    });
+  }
+
+  /**
+   * Processes an inlineMath (inline math) node.
+   * Handles $...$ syntax for inline math expressions.
+   */
+  private processInlineMath(
+    node: InlineMath,
+    text: string,
+    decorations: DecorationRange[]
+  ): void {
+    if (!this.hasValidPosition(node)) return;
+
+    const start = node.position!.start.offset!;
+    const end = node.position!.end.offset!;
+
+    // Extract LaTeX content using regex to match delimiters and content
+    const latexText = text.slice(start, end);
+    const match = /^(\$+)([^]+)\1/.exec(latexText);
+    if (!match) return;
+
+    // Extract LaTeX content (delimiterLength and latexContent extracted but not used here)
+    // The decorator will extract and use them when rendering
+
+    // Create decoration range for the entire inline math expression
+    // The decorator will handle rendering the SVG
+    decorations.push({
+      startPos: start,
+      endPos: end,
+      type: 'inlineMath',
+    });
   }
 
 }

@@ -4,6 +4,7 @@
 let unified: any;
 let remarkParse: any;
 let remarkGfm: any;
+let remarkMath: any;
 let visit: any;
 
 export async function getRemarkProcessor() {
@@ -13,6 +14,7 @@ export async function getRemarkProcessor() {
       unified = require('unified').unified;
       remarkParse = require('remark-parse');
       remarkGfm = require('remark-gfm');
+      remarkMath = require('remark-math');
       visit = require('unist-util-visit').visit;
     } catch {
       // Fall back to ESM dynamic import (for Jest/testing)
@@ -20,6 +22,9 @@ export async function getRemarkProcessor() {
       unified = unifiedModule.unified;
       remarkParse = await import('remark-parse');
       remarkGfm = await import('remark-gfm');
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - remark-math doesn't have TypeScript declarations
+      remarkMath = await import('remark-math');
       const visitModule = await import('unist-util-visit');
       visit = visitModule.visit;
     }
@@ -29,6 +34,7 @@ export async function getRemarkProcessor() {
     unified,
     remarkParse: remarkParse.default || remarkParse,
     remarkGfm: remarkGfm.default || remarkGfm,
+    remarkMath: remarkMath.default || remarkMath,
     visit,
   };
 }
@@ -41,6 +47,7 @@ export function getRemarkProcessorSync() {
     unified = require('unified').unified;
     remarkParse = require('remark-parse');
     remarkGfm = require('remark-gfm');
+    remarkMath = require('remark-math');
     visit = require('unist-util-visit').visit;
   }
 
@@ -48,6 +55,7 @@ export function getRemarkProcessorSync() {
     unified,
     remarkParse: remarkParse.default || remarkParse,
     remarkGfm: remarkGfm.default || remarkGfm,
+    remarkMath: remarkMath.default || remarkMath,
     visit,
   };
 }
