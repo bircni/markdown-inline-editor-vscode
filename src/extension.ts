@@ -217,11 +217,15 @@ export function activate(context: vscode.ExtensionContext) {
       const singleClickEnabled = config.links.singleClickOpen();
       linkClickHandler.setEnabled(singleClickEnabled);
     }
+
+    if (event.affectsConfiguration('markdownInlineEditor.colors')) {
+      decorator.recreateColorDependentTypes();
+    }
   });
 
-  // Listen for theme changes to update code decoration colors
+  // Listen for theme changes to update code and color-dependent decoration types
   const changeColorTheme = vscode.window.onDidChangeActiveColorTheme(() => {
-    decorator.recreateCodeDecorationType();
+    decorator.recreateColorDependentTypes();
   });
 
   context.subscriptions.push(changeActiveTextEditor);

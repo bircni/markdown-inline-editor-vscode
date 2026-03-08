@@ -122,6 +122,20 @@ export class Decorator {
       getGhostFaintOpacity: () => this.getGhostFaintOpacity(),
       getFrontmatterDelimiterOpacity: () => this.getFrontmatterDelimiterOpacity(),
       getCodeBlockLanguageOpacity: () => this.getCodeBlockLanguageOpacity(),
+      getHeading1Color: () => config.colors.heading1(),
+      getHeading2Color: () => config.colors.heading2(),
+      getHeading3Color: () => config.colors.heading3(),
+      getHeading4Color: () => config.colors.heading4(),
+      getHeading5Color: () => config.colors.heading5(),
+      getHeading6Color: () => config.colors.heading6(),
+      getLinkColor: () => config.colors.link(),
+      getListMarkerColor: () => config.colors.listMarker(),
+      getInlineCodeColor: () => config.colors.inlineCode(),
+      getEmphasisColor: () => config.colors.emphasis(),
+      getBlockquoteColor: () => config.colors.blockquote(),
+      getImageColor: () => config.colors.image(),
+      getHorizontalRuleColor: () => config.colors.horizontalRule(),
+      getCheckboxColor: () => config.colors.checkbox(),
     });
   }
 
@@ -717,6 +731,17 @@ export class Decorator {
     this.decorationTypes.recreateCodeDecorationType();
 
     // Reapply decorations with the new decoration type
+    if (this.activeEditor && this.isMarkdownDocument()) {
+      this.updateDecorationsForSelection();
+    }
+  }
+
+  /**
+   * Recreates all decoration types that depend on color settings or theme.
+   * Called when markdownInlineEditor.colors or active color theme changes.
+   */
+  recreateColorDependentTypes(): void {
+    this.decorationTypes.recreateColorDependentTypes();
     if (this.activeEditor && this.isMarkdownDocument()) {
       this.updateDecorationsForSelection();
     }

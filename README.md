@@ -129,6 +129,7 @@ The extension supports the following Markdown (and common GitHub-flavored) featu
 
 ### Configuration
 - [x] **Show Raw Markdown in Diffs** • [Details][feat-show-raw-markdown-in-diffs] • [Issue #20](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/20)
+- [x] **Customizable Syntax Colors** (headings, links, lists, code, emphasis, blockquote, image, horizontal rule, checkbox) • [Details][feat-customizable-syntax-colors] • [Issue #49](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/49)
 
 ## Customize (optional)
 
@@ -142,6 +143,8 @@ Everything works out of the box. If you want to tune the experience, open Settin
   - Opens links/images without Ctrl/Cmd-click, but may interfere with text selection.
 - **Emoji shortcodes** (`emojis.enabled`, default `true`)
   - Disable if you prefer seeing `:shortcode:` text.
+- **Syntax colors** (`colors.heading1` … `colors.checkbox`, 14 options)
+  - Optional hex overrides (e.g. `#e06c75`) for headings, links, list markers, inline code, emphasis, blockquote, image, horizontal rule, checkbox. Unset or invalid values use theme-derived defaults. See [Customizable Syntax Colors][feat-customizable-syntax-colors].
 
 ### Example `settings.json`
 
@@ -403,6 +406,7 @@ Special thanks to these projects, which inspired or enabled this extension:
 [feat-links]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/links.md
 [feat-mermaid-diagrams]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/mermaid-diagrams.md
 [feat-show-raw-markdown-in-diffs]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/show-raw-markdown-in-diffs.md
+[feat-customizable-syntax-colors]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/customizable-syntax-colors.md
 [feat-strikethrough]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/strikethrough.md
 [feat-task-lists]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/task-lists.md
 [feat-unordered-lists]: https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/blob/main/docs/features/done/unordered-lists.md

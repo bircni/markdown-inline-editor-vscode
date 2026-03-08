@@ -90,35 +90,43 @@ export function CodeBlockLanguageDecorationType(opacity: number = 0.3) {
 /**
  * Creates a decoration type for bold text styling.
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses default (no color override)
  * @returns {vscode.TextEditorDecorationType} A decoration type for bold text
  */
-export function BoldDecorationType() {
-  return window.createTextEditorDecorationType({
-    fontWeight: 'bold',
-  });
+export function BoldDecorationType(color?: string | ThemeColor) {
+  const options: Record<string, unknown> = { fontWeight: 'bold' };
+  if (color !== undefined) {
+    options.color = color;
+  }
+  return window.createTextEditorDecorationType(options);
 }
 
 /**
  * Creates a decoration type for italic text styling.
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses default
  * @returns {vscode.TextEditorDecorationType} A decoration type for italic text
  */
-export function ItalicDecorationType() {
-  return window.createTextEditorDecorationType({
-    fontStyle: 'italic',
-  });
+export function ItalicDecorationType(color?: string | ThemeColor) {
+  const options: Record<string, unknown> = { fontStyle: 'italic' };
+  if (color !== undefined) {
+    options.color = color;
+  }
+  return window.createTextEditorDecorationType(options);
 }
 
 /**
  * Creates a decoration type for bold+italic text styling.
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses default
  * @returns {vscode.TextEditorDecorationType} A decoration type for bold+italic text
  */
-export function BoldItalicDecorationType() {
-  return window.createTextEditorDecorationType({
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-  });
+export function BoldItalicDecorationType(color?: string | ThemeColor) {
+  const options: Record<string, unknown> = { fontWeight: 'bold', fontStyle: 'italic' };
+  if (color !== undefined) {
+    options.color = color;
+  }
+  return window.createTextEditorDecorationType(options);
 }
 
 /**
@@ -146,20 +154,21 @@ export function StrikethroughDecorationType() {
  * via {@link Decorator.recreateCodeDecorationType}, ensuring the background color
  * adapts to the current theme without requiring a restart.
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color for text; when undefined only background is applied
  * @returns {vscode.TextEditorDecorationType} A decoration type for inline code
  */
-export function CodeDecorationType() {
+export function CodeDecorationType(color?: string | ThemeColor) {
   const isDark = isDarkTheme();
-  
-  // For dark themes: use white overlay to lighten (~30% brighter)
-  // For light themes: use black overlay to darken (~30% darker)
   const backgroundColor = isDark
-    ? `rgba(255, 255, 255, ${BRIGHTNESS_OVERLAY_OPACITY})` // White overlay - lightens dark backgrounds
-    : `rgba(0, 0, 0, ${BRIGHTNESS_OVERLAY_OPACITY})`;      // Black overlay - darkens light backgrounds
-  
-  return window.createTextEditorDecorationType({
-    backgroundColor: backgroundColor,
-  });
+    ? `rgba(255, 255, 255, ${BRIGHTNESS_OVERLAY_OPACITY})`
+    : `rgba(0, 0, 0, ${BRIGHTNESS_OVERLAY_OPACITY})`;
+  const options: Record<string, unknown> = {
+    backgroundColor,
+  };
+  if (color !== undefined) {
+    options.color = color;
+  }
+  return window.createTextEditorDecorationType(options);
 }
 
 /**
@@ -260,59 +269,78 @@ const HEADING_CONFIG = [
  * Creates a heading decoration type with the specified level.
  * 
  * @param {number} level - Heading level (1-6)
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses editor.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for the heading level
  */
-function createHeadingDecoration(level: number) {
+function createHeadingDecoration(level: number, color?: string | ThemeColor) {
   const config = HEADING_CONFIG[level - 1];
   if (!config) throw new Error(`Invalid heading level: ${level}`);
-  
+  const resolvedColor = color ?? new ThemeColor('editor.foreground');
   return window.createTextEditorDecorationType({
+    color: resolvedColor,
     textDecoration: `none; font-size: ${config.size};`,
     ...(config.bold ? { fontWeight: 'bold' } : {}),
   });
 }
 
-export const Heading1DecorationType = () => createHeadingDecoration(1);
-export const Heading2DecorationType = () => createHeadingDecoration(2);
-export const Heading3DecorationType = () => createHeadingDecoration(3);
-export const Heading4DecorationType = () => createHeadingDecoration(4);
-export const Heading5DecorationType = () => createHeadingDecoration(5);
-export const Heading6DecorationType = () => createHeadingDecoration(6);
+export function Heading1DecorationType(color?: string | ThemeColor) {
+  return createHeadingDecoration(1, color);
+}
+export function Heading2DecorationType(color?: string | ThemeColor) {
+  return createHeadingDecoration(2, color);
+}
+export function Heading3DecorationType(color?: string | ThemeColor) {
+  return createHeadingDecoration(3, color);
+}
+export function Heading4DecorationType(color?: string | ThemeColor) {
+  return createHeadingDecoration(4, color);
+}
+export function Heading5DecorationType(color?: string | ThemeColor) {
+  return createHeadingDecoration(5, color);
+}
+export function Heading6DecorationType(color?: string | ThemeColor) {
+  return createHeadingDecoration(6, color);
+}
 
 /**
  * Creates a decoration type for link styling.
  * 
  * Sets cursor to pointer on hover to indicate clickability.
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses textLink.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for links
  */
-export function LinkDecorationType() {
+export function LinkDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('textLink.foreground');
   return window.createTextEditorDecorationType({
-    color: new ThemeColor('textLink.foreground'),
+    color: resolvedColor,
     textDecoration: 'underline',
-    cursor: 'pointer', // Show pointer cursor on hover
+    cursor: 'pointer',
     after: {
       contentText: ' 🔗',
-      color: new ThemeColor('textLink.foreground'),
+      color: resolvedColor,
     },
   });
 }
 
 /**
  * Creates a decoration type for image styling.
- * 
+ *
  * Adds an image icon after the image alt text to visually indicate it's an image.
  * Sets cursor to pointer on hover to indicate clickability (same as links).
+ *
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses textLink.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for images
  */
-export function ImageDecorationType() {
+export function ImageDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('textLink.foreground');
   return window.createTextEditorDecorationType({
-    color: new ThemeColor('textLink.foreground'),
+    color: resolvedColor,
     cursor: 'pointer', // Show pointer cursor on hover (same as links)
     textDecoration: 'underline; text-decoration-style: dashed; text-decoration-thickness: 1px;',
     after: {
       contentText: ' ⬔',
-      color: new ThemeColor('textLink.foreground'),
+      color: resolvedColor,
     },
   });
 }
@@ -323,15 +351,16 @@ export function ImageDecorationType() {
  * Replaces '>' characters with a vertical blue bar.
  * Nested blockquotes automatically show multiple bars (one per '>').
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses textLink.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for blockquote markers
  */
-export function BlockquoteDecorationType() {
-  // Hide the '>' character and replace it with a vertical bar
+export function BlockquoteDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('textLink.foreground');
   return window.createTextEditorDecorationType({
-    textDecoration: 'none; display: none;', // Properly hide the original '>' character
+    textDecoration: 'none; display: none;',
     before: {
       contentText: '│',
-      color: new ThemeColor('textLink.foreground'),
+      color: resolvedColor,
       fontWeight: 'bold',
     },
   });
@@ -341,18 +370,18 @@ export function BlockquoteDecorationType() {
  * Creates a decoration type for unordered list item styling.
  * 
  * Replaces unordered list markers (-, *, +) with a bullet point (•).
- * Note: This decoration is NOT applied to ordered lists (1., 2., etc.) which keep their numbers visible.
  * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses editor.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for unordered list items
  */
-export function ListItemDecorationType() {
-  // Hide the list marker and replace it with a bullet point
+export function ListItemDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('editor.foreground');
   return window.createTextEditorDecorationType({
-    textDecoration: 'none; display: none;', // Properly hide the original marker
+    textDecoration: 'none; display: none;',
     before: {
       contentText: '• ',
       fontWeight: 'bold',
-      color: new ThemeColor('editor.foreground'),
+      color: resolvedColor,
     },
   });
 }
@@ -360,41 +389,35 @@ export function ListItemDecorationType() {
 /**
  * Creates a decoration type for ordered list item marker styling.
  * 
- * Ensures ordered list markers (1., 2., etc.) use the same color as regular text.
- * This overrides any theme-specific styling that might apply different colors to list markers.
- * 
- * Note: We intentionally do NOT apply bold styling to ordered list numbers.
- * If we use bold on ordered numbers, the fonts look out of line with the rest of the text,
- * causing visual alignment issues. Unordered list bullets and checkboxes can be bold
- * because they are replaced symbols (•, ☐, ☑) rather than the original text.
- * 
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses editor.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for ordered list item markers
  */
-export function OrderedListItemDecorationType() {
-  // Apply color directly to the marker text without hiding/replacing it
-  // Note: No fontWeight: 'bold' - see function JSDoc for explanation
+export function OrderedListItemDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('editor.foreground');
   return window.createTextEditorDecorationType({
-    color: new ThemeColor('editor.foreground')
+    color: resolvedColor,
   });
 }
 
 /**
  * Creates a decoration type for horizontal rules (thematic breaks).
- * 
+ *
  * Replaces ---, ***, or ___ with a visual horizontal line that spans the full editor width.
  * Uses border-bottom approach to prevent editor width expansion.
  * Hides the original text and shows only the border line.
  * Based on working implementation from examples/horizontal-line-working.
- * 
+ *
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color for the line; when undefined uses editorWidget.border
  * @returns {vscode.TextEditorDecorationType} A decoration type for horizontal rules
  */
-export function HorizontalRuleDecorationType() {
+export function HorizontalRuleDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('editorWidget.border');
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;', // Hide the original text (---, ***, ___)
     isWholeLine: true,
     borderWidth: '0 0 1px 0', // Only bottom border, 1px thick
     borderStyle: 'solid',
-    borderColor: new ThemeColor('editorWidget.border'),
+    borderColor: resolvedColor,
   });
 }
 
@@ -404,14 +427,16 @@ export function HorizontalRuleDecorationType() {
  * Replaces [ ] with an empty checkbox symbol (☐).
  * Click inside the brackets to toggle.
  *
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses editor.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for unchecked checkboxes
  */
-export function CheckboxUncheckedDecorationType() {
+export function CheckboxUncheckedDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('editor.foreground');
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;', // Hide the original [ ]
     before: {
       contentText: '☐',
-      color: new ThemeColor('editor.foreground'),
+      color: resolvedColor,
     },
   });
 }
@@ -422,14 +447,16 @@ export function CheckboxUncheckedDecorationType() {
  * Replaces [x] or [X] with a checked checkbox symbol (☑).
  * Click inside the brackets to toggle.
  *
+ * @param {string | ThemeColor | undefined} color - Optional hex or theme color; when undefined uses editor.foreground
  * @returns {vscode.TextEditorDecorationType} A decoration type for checked checkboxes
  */
-export function CheckboxCheckedDecorationType() {
+export function CheckboxCheckedDecorationType(color?: string | ThemeColor) {
+  const resolvedColor = color ?? new ThemeColor('editor.foreground');
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;', // Hide the original [x]
     before: {
       contentText: '☑',
-      color: new ThemeColor('editor.foreground'),
+      color: resolvedColor,
     },
   });
 }

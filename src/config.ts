@@ -2,6 +2,23 @@ import * as vscode from 'vscode';
 
 const SECTION = 'markdownInlineEditor' as const;
 
+/** Matches 3- or 6-digit hex color (e.g. #f00 or #ff5500). Invalid values are treated as unset. */
+const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+
+function parseHexColor(value: string | undefined): string | undefined {
+  if (value === undefined || value === null || typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed && HEX_COLOR_REGEX.test(trimmed) ? trimmed : undefined;
+}
+
+function getColorConfig(key: string): string | undefined {
+  return parseHexColor(
+    vscode.workspace.getConfiguration(SECTION).get<string>(`colors.${key}`)
+  );
+}
+
 export const config = {
   diffView: {
     applyDecorations(): boolean {
@@ -39,6 +56,50 @@ export const config = {
       return vscode.workspace
         .getConfiguration(SECTION)
         .get<boolean>('emojis.enabled', true);
+    },
+  },
+  colors: {
+    heading1(): string | undefined {
+      return getColorConfig('heading1');
+    },
+    heading2(): string | undefined {
+      return getColorConfig('heading2');
+    },
+    heading3(): string | undefined {
+      return getColorConfig('heading3');
+    },
+    heading4(): string | undefined {
+      return getColorConfig('heading4');
+    },
+    heading5(): string | undefined {
+      return getColorConfig('heading5');
+    },
+    heading6(): string | undefined {
+      return getColorConfig('heading6');
+    },
+    link(): string | undefined {
+      return getColorConfig('link');
+    },
+    listMarker(): string | undefined {
+      return getColorConfig('listMarker');
+    },
+    inlineCode(): string | undefined {
+      return getColorConfig('inlineCode');
+    },
+    emphasis(): string | undefined {
+      return getColorConfig('emphasis');
+    },
+    blockquote(): string | undefined {
+      return getColorConfig('blockquote');
+    },
+    image(): string | undefined {
+      return getColorConfig('image');
+    },
+    horizontalRule(): string | undefined {
+      return getColorConfig('horizontalRule');
+    },
+    checkbox(): string | undefined {
+      return getColorConfig('checkbox');
     },
   },
 } as const;

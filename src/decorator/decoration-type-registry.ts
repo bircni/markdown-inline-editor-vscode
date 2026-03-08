@@ -36,6 +36,20 @@ type RegistryOptions = {
   getGhostFaintOpacity: () => number;
   getFrontmatterDelimiterOpacity: () => number;
   getCodeBlockLanguageOpacity: () => number;
+  getHeading1Color?: () => string | undefined;
+  getHeading2Color?: () => string | undefined;
+  getHeading3Color?: () => string | undefined;
+  getHeading4Color?: () => string | undefined;
+  getHeading5Color?: () => string | undefined;
+  getHeading6Color?: () => string | undefined;
+  getLinkColor?: () => string | undefined;
+  getListMarkerColor?: () => string | undefined;
+  getInlineCodeColor?: () => string | undefined;
+  getEmphasisColor?: () => string | undefined;
+  getBlockquoteColor?: () => string | undefined;
+  getImageColor?: () => string | undefined;
+  getHorizontalRuleColor?: () => string | undefined;
+  getCheckboxColor?: () => string | undefined;
 };
 
 export class DecorationTypeRegistry {
@@ -75,29 +89,29 @@ export class DecorationTypeRegistry {
     this.hideDecorationType = HideDecorationType();
     this.transparentDecorationType = TransparentDecorationType();
     this.ghostFaintDecorationType = GhostFaintDecorationType(this.options.getGhostFaintOpacity());
-    this.boldDecorationType = BoldDecorationType();
-    this.italicDecorationType = ItalicDecorationType();
-    this.boldItalicDecorationType = BoldItalicDecorationType();
+    this.boldDecorationType = BoldDecorationType(this.options.getEmphasisColor?.());
+    this.italicDecorationType = ItalicDecorationType(this.options.getEmphasisColor?.());
+    this.boldItalicDecorationType = BoldItalicDecorationType(this.options.getEmphasisColor?.());
     this.strikethroughDecorationType = StrikethroughDecorationType();
-    this.codeDecorationType = CodeDecorationType();
+    this.codeDecorationType = CodeDecorationType(this.options.getInlineCodeColor?.());
     this.codeBlockDecorationType = CodeBlockDecorationType();
     this.codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType(this.options.getCodeBlockLanguageOpacity());
     this.selectionOverlayDecorationType = SelectionOverlayDecorationType();
     this.headingDecorationType = HeadingDecorationType();
-    this.heading1DecorationType = Heading1DecorationType();
-    this.heading2DecorationType = Heading2DecorationType();
-    this.heading3DecorationType = Heading3DecorationType();
-    this.heading4DecorationType = Heading4DecorationType();
-    this.heading5DecorationType = Heading5DecorationType();
-    this.heading6DecorationType = Heading6DecorationType();
-    this.linkDecorationType = LinkDecorationType();
-    this.imageDecorationType = ImageDecorationType();
-    this.blockquoteDecorationType = BlockquoteDecorationType();
-    this.listItemDecorationType = ListItemDecorationType();
-    this.orderedListItemDecorationType = OrderedListItemDecorationType();
-    this.horizontalRuleDecorationType = HorizontalRuleDecorationType();
-    this.checkboxUncheckedDecorationType = CheckboxUncheckedDecorationType();
-    this.checkboxCheckedDecorationType = CheckboxCheckedDecorationType();
+    this.heading1DecorationType = Heading1DecorationType(this.options.getHeading1Color?.());
+    this.heading2DecorationType = Heading2DecorationType(this.options.getHeading2Color?.());
+    this.heading3DecorationType = Heading3DecorationType(this.options.getHeading3Color?.());
+    this.heading4DecorationType = Heading4DecorationType(this.options.getHeading4Color?.());
+    this.heading5DecorationType = Heading5DecorationType(this.options.getHeading5Color?.());
+    this.heading6DecorationType = Heading6DecorationType(this.options.getHeading6Color?.());
+    this.linkDecorationType = LinkDecorationType(this.options.getLinkColor?.());
+    this.imageDecorationType = ImageDecorationType(this.options.getImageColor?.());
+    this.blockquoteDecorationType = BlockquoteDecorationType(this.options.getBlockquoteColor?.());
+    this.listItemDecorationType = ListItemDecorationType(this.options.getListMarkerColor?.());
+    this.orderedListItemDecorationType = OrderedListItemDecorationType(this.options.getListMarkerColor?.());
+    this.horizontalRuleDecorationType = HorizontalRuleDecorationType(this.options.getHorizontalRuleColor?.());
+    this.checkboxUncheckedDecorationType = CheckboxUncheckedDecorationType(this.options.getCheckboxColor?.());
+    this.checkboxCheckedDecorationType = CheckboxCheckedDecorationType(this.options.getCheckboxColor?.());
     this.frontmatterDecorationType = FrontmatterDecorationType();
     this.frontmatterDelimiterDecorationType = FrontmatterDelimiterDecorationType(this.options.getFrontmatterDelimiterOpacity());
     this.emojiDecorationType = EmojiDecorationType();
@@ -146,10 +160,35 @@ export class DecorationTypeRegistry {
   recreateCodeDecorationType(): void {
     this.recreateDecorationType(
       this.codeDecorationType,
-      () => CodeDecorationType(),
+      () => CodeDecorationType(this.options.getInlineCodeColor?.()),
       (newType) => { this.codeDecorationType = newType; },
       'code'
     );
+  }
+
+  /**
+   * Recreates all decoration types that depend on color settings or theme.
+   * Call when config (markdownInlineEditor.colors) or active color theme changes.
+   */
+  recreateColorDependentTypes(): void {
+    this.recreateDecorationType(this.heading1DecorationType, () => Heading1DecorationType(this.options.getHeading1Color?.()), (t) => { this.heading1DecorationType = t; }, 'heading1');
+    this.recreateDecorationType(this.heading2DecorationType, () => Heading2DecorationType(this.options.getHeading2Color?.()), (t) => { this.heading2DecorationType = t; }, 'heading2');
+    this.recreateDecorationType(this.heading3DecorationType, () => Heading3DecorationType(this.options.getHeading3Color?.()), (t) => { this.heading3DecorationType = t; }, 'heading3');
+    this.recreateDecorationType(this.heading4DecorationType, () => Heading4DecorationType(this.options.getHeading4Color?.()), (t) => { this.heading4DecorationType = t; }, 'heading4');
+    this.recreateDecorationType(this.heading5DecorationType, () => Heading5DecorationType(this.options.getHeading5Color?.()), (t) => { this.heading5DecorationType = t; }, 'heading5');
+    this.recreateDecorationType(this.heading6DecorationType, () => Heading6DecorationType(this.options.getHeading6Color?.()), (t) => { this.heading6DecorationType = t; }, 'heading6');
+    this.recreateDecorationType(this.linkDecorationType, () => LinkDecorationType(this.options.getLinkColor?.()), (t) => { this.linkDecorationType = t; }, 'link');
+    this.recreateDecorationType(this.blockquoteDecorationType, () => BlockquoteDecorationType(this.options.getBlockquoteColor?.()), (t) => { this.blockquoteDecorationType = t; }, 'blockquote');
+    this.recreateDecorationType(this.listItemDecorationType, () => ListItemDecorationType(this.options.getListMarkerColor?.()), (t) => { this.listItemDecorationType = t; }, 'listItem');
+    this.recreateDecorationType(this.orderedListItemDecorationType, () => OrderedListItemDecorationType(this.options.getListMarkerColor?.()), (t) => { this.orderedListItemDecorationType = t; }, 'orderedListItem');
+    this.recreateDecorationType(this.codeDecorationType, () => CodeDecorationType(this.options.getInlineCodeColor?.()), (t) => { this.codeDecorationType = t; }, 'code');
+    this.recreateDecorationType(this.boldDecorationType, () => BoldDecorationType(this.options.getEmphasisColor?.()), (t) => { this.boldDecorationType = t; }, 'bold');
+    this.recreateDecorationType(this.italicDecorationType, () => ItalicDecorationType(this.options.getEmphasisColor?.()), (t) => { this.italicDecorationType = t; }, 'italic');
+    this.recreateDecorationType(this.boldItalicDecorationType, () => BoldItalicDecorationType(this.options.getEmphasisColor?.()), (t) => { this.boldItalicDecorationType = t; }, 'boldItalic');
+    this.recreateDecorationType(this.imageDecorationType, () => ImageDecorationType(this.options.getImageColor?.()), (t) => { this.imageDecorationType = t; }, 'image');
+    this.recreateDecorationType(this.horizontalRuleDecorationType, () => HorizontalRuleDecorationType(this.options.getHorizontalRuleColor?.()), (t) => { this.horizontalRuleDecorationType = t; }, 'horizontalRule');
+    this.recreateDecorationType(this.checkboxUncheckedDecorationType, () => CheckboxUncheckedDecorationType(this.options.getCheckboxColor?.()), (t) => { this.checkboxUncheckedDecorationType = t; }, 'checkboxUnchecked');
+    this.recreateDecorationType(this.checkboxCheckedDecorationType, () => CheckboxCheckedDecorationType(this.options.getCheckboxColor?.()), (t) => { this.checkboxCheckedDecorationType = t; }, 'checkboxChecked');
   }
 
   recreateGhostFaintDecorationType(): void {

@@ -117,6 +117,90 @@
           "default": true,
           "description": "Render emoji shortcodes (e.g., :smile:)",
           "markdownDescription": "Render emoji shortcodes (e.g., :smile:) inline in Markdown documents."
+        },
+        "markdownInlineEditor.colors.heading1": {
+          "type": "string",
+          "description": "Hex color for level-1 headings",
+          "format": "color",
+          "markdownDescription": "Hex color for level-1 headings (e.g. `#e06c75`). Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.heading2": {
+          "type": "string",
+          "description": "Hex color for level-2 headings",
+          "format": "color",
+          "markdownDescription": "Hex color for level-2 headings. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.heading3": {
+          "type": "string",
+          "description": "Hex color for level-3 headings",
+          "format": "color",
+          "markdownDescription": "Hex color for level-3 headings. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.heading4": {
+          "type": "string",
+          "description": "Hex color for level-4 headings",
+          "format": "color",
+          "markdownDescription": "Hex color for level-4 headings. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.heading5": {
+          "type": "string",
+          "description": "Hex color for level-5 headings",
+          "format": "color",
+          "markdownDescription": "Hex color for level-5 headings. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.heading6": {
+          "type": "string",
+          "description": "Hex color for level-6 headings",
+          "format": "color",
+          "markdownDescription": "Hex color for level-6 headings. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.link": {
+          "type": "string",
+          "description": "Hex color for link text",
+          "format": "color",
+          "markdownDescription": "Hex color for link text. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.listMarker": {
+          "type": "string",
+          "description": "Hex color for list markers",
+          "format": "color",
+          "markdownDescription": "Hex color for list markers (unordered and ordered). Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.inlineCode": {
+          "type": "string",
+          "description": "Hex color for inline code",
+          "format": "color",
+          "markdownDescription": "Hex color for inline code. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.emphasis": {
+          "type": "string",
+          "description": "Hex color for emphasis (bold/italic)",
+          "format": "color",
+          "markdownDescription": "Hex color for emphasis (bold/italic). Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.blockquote": {
+          "type": "string",
+          "description": "Hex color for blockquote",
+          "format": "color",
+          "markdownDescription": "Hex color for blockquote markers and/or text. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.image": {
+          "type": "string",
+          "description": "Hex color for image link text",
+          "format": "color",
+          "markdownDescription": "Hex color for image link text/placeholder. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.horizontalRule": {
+          "type": "string",
+          "description": "Hex color for horizontal rule line",
+          "format": "color",
+          "markdownDescription": "Hex color for horizontal rule line. Leave empty to use theme default."
+        },
+        "markdownInlineEditor.colors.checkbox": {
+          "type": "string",
+          "description": "Hex color for checkbox (unchecked and checked)",
+          "format": "color",
+          "markdownDescription": "Hex color for unchecked and checked checkbox symbols. Leave empty to use theme default."
         }
       }
     }
