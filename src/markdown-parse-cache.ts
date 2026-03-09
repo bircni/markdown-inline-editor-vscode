@@ -1,5 +1,5 @@
 import type * as vscode from 'vscode';
-import type { DecorationRange, ScopeRange, MermaidBlock, MarkdownParser } from './parser';
+import type { DecorationRange, ScopeRange, MermaidBlock, MathRegion, MarkdownParser } from './parser';
 
 export type ParseEntry = {
   version: number;
@@ -7,6 +7,7 @@ export type ParseEntry = {
   decorations: DecorationRange[];
   scopes: ScopeRange[];
   mermaidBlocks: MermaidBlock[];
+  mathRegions: MathRegion[];
 };
 
 type CacheEntry = ParseEntry & {
@@ -28,13 +29,14 @@ export class MarkdownParseCache {
     }
 
     const text = document.getText();
-    const { decorations, scopes, mermaidBlocks } = this.parser.extractDecorationsWithScopes(text);
+    const { decorations, scopes, mermaidBlocks, mathRegions } = this.parser.extractDecorationsWithScopes(text);
     const entry: CacheEntry = {
       version: document.version,
       text,
       decorations,
       scopes,
       mermaidBlocks,
+      mathRegions,
       lastAccessed: ++this.accessCounter,
     };
 

@@ -16,6 +16,7 @@ import type {
 } from "mdast";
 import { getRemarkProcessorSync, getRemarkProcessor } from "./parser-remark";
 import { getEmojiMap } from "./emoji-map-loader";
+import { scanMathRegions } from "./math/math-scanner";
 
 /**
  * Represents a decoration range in the markdown document.
@@ -57,12 +58,24 @@ export interface MermaidBlock {
 }
 
 /**
+ * One detected math span (inline $...$ or block $$...$$).
+ * Positions are in normalized document text (LF line endings).
+ */
+export interface MathRegion {
+  startPos: number;
+  endPos: number;
+  source: string;
+  displayMode: boolean;
+}
+
+/**
  * Result of parsing markdown for decorations and scopes.
  */
 export interface ParseResult {
   decorations: DecorationRange[];
   scopes: ScopeRange[];
   mermaidBlocks: MermaidBlock[];
+  mathRegions: MathRegion[];
 }
 
 /**
@@ -182,7 +195,7 @@ export class MarkdownParser {
    */
   extractDecorationsWithScopes(text: string): ParseResult {
     if (!text || typeof text !== 'string') {
-      return { decorations: [], scopes: [], mermaidBlocks: [] };
+      return { decorations: [], scopes: [], mermaidBlocks: [], mathRegions: [] };
     }
 
     // Normalize line endings to \n for consistent position tracking
@@ -222,6 +235,7 @@ export class MarkdownParser {
       decorations,
       scopes: this.dedupeScopes(scopes),
       mermaidBlocks,
+      mathRegions: scanMathRegions(normalizedText),
     };
   }
 

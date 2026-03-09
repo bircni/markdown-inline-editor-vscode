@@ -1,6 +1,6 @@
 import { Range, Position, TextEditor, TextDocument, TextDocumentChangeEvent, window, TextEditorSelectionChangeKind, ColorThemeKind, workspace, DecorationOptions } from 'vscode';
 import { createHash } from 'crypto';
-import { DecorationRange, DecorationType, MermaidBlock, ScopeRange } from './parser';
+import { DecorationRange, DecorationType, MermaidBlock, MathRegion, ScopeRange } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
 import { config } from './config';
 import { isDiffLikeUri, isDiffViewVisible } from './diff-context';
@@ -9,6 +9,7 @@ import { DecorationTypeRegistry } from './decorator/decoration-type-registry';
 import { filterDecorationsForEditor, ScopeEntry } from './decorator/visibility-model';
 import { handleCheckboxClick } from './decorator/checkbox-toggle';
 import { MermaidDiagramDecorations } from './decorator/mermaid-diagram-decorations';
+import { MathDecorations } from './math/math-decorations';
 import { renderMermaidSvg, svgToDataUri, createErrorSvg } from './mermaid/mermaid-renderer';
 import { MermaidHoverIndicatorDecorationType } from './decorations';
 
@@ -113,6 +114,7 @@ export class Decorator {
 
   private decorationTypes: DecorationTypeRegistry;
   private mermaidDecorations = new MermaidDiagramDecorations();
+  private mathDecorations = new MathDecorations();
   private mermaidUpdateToken = 0;
   private mermaidHoverIndicatorDecorationType = MermaidHoverIndicatorDecorationType();
 
@@ -319,6 +321,7 @@ export class Decorator {
     // Also clear ghost faint decoration (not in decorationTypeMap)
     this.activeEditor.setDecorations(this.decorationTypes.getGhostFaintDecorationType(), []);
     this.mermaidDecorations.clear(this.activeEditor);
+    this.mathDecorations.clear(this.activeEditor);
     this.activeEditor.setDecorations(this.mermaidHoverIndicatorDecorationType, []);
   }
 
@@ -351,7 +354,7 @@ export class Decorator {
 
     // Parse document (uses cache if version unchanged)
     const version = document.version;
-    const { decorations, scopes, text, mermaidBlocks } = this.parseDocument(document);
+    const { decorations, scopes, text, mermaidBlocks, mathRegions } = this.parseDocument(document);
 
     // Re-validate version before applying (race condition protection)
     if (document.version !== version) {
@@ -363,7 +366,37 @@ export class Decorator {
 
     // Apply decorations
     this.applyDecorations(filtered);
+    if (config.math.enabled() && mathRegions.length > 0) {
+      this.applyMathDecorations(mathRegions, text);
+    } else {
+      if (this.activeEditor) {
+        this.mathDecorations.clear(this.activeEditor);
+      }
+    }
     void this.updateMermaidDiagrams(mermaidBlocks, text, document.version);
+  }
+
+  /**
+   * Applies math decorations for inline and block regions using normalized positions.
+   * When selection or cursor intersects a math region, that region is shown raw (range passed as null).
+   */
+  private applyMathDecorations(mathRegions: MathRegion[], normalizedText: string): void {
+    if (!this.activeEditor) return;
+    const editor = this.activeEditor;
+    const regionsWithRanges = mathRegions.map((region) => {
+      const inside = this.isSelectionOrCursorInsideOffsets(
+        region.startPos,
+        region.endPos,
+        normalizedText,
+        editor.selections,
+        editor.document
+      );
+      return {
+        region,
+        range: inside ? null : this.createRange(region.startPos, region.endPos, normalizedText),
+      };
+    });
+    this.mathDecorations.apply(editor, regionsWithRanges);
   }
 
   /**
@@ -418,6 +451,7 @@ export class Decorator {
     scopes: ScopeEntry[];
     text: string;
     mermaidBlocks: MermaidBlock[];
+    mathRegions: MathRegion[];
   } {
     const entry = this.parseCache.get(document);
     const scopeEntries = this.buildScopeEntries(entry.scopes, entry.text);
@@ -426,6 +460,7 @@ export class Decorator {
       scopes: scopeEntries,
       text: entry.text,
       mermaidBlocks: entry.mermaidBlocks,
+      mathRegions: entry.mathRegions,
     };
   }
 
@@ -659,6 +694,17 @@ export class Decorator {
 
     const ghostFaintRanges = (filteredDecorations.get('ghostFaint') as Range[] | undefined) || [];
     this.activeEditor.setDecorations(this.decorationTypes.getGhostFaintDecorationType(), ghostFaintRanges);
+  }
+
+  /**
+   * Clears the math decoration cache and forces recalculation on next render.
+   * Call when editor font size or line height changes so math is re-rendered at the new size.
+   */
+  clearMathDecorationCache(): void {
+    if (this.activeEditor) {
+      this.mathDecorations.clear(this.activeEditor);
+    }
+    this.updateDecorationsForSelection();
   }
 
   /**

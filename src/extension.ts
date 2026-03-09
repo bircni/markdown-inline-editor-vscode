@@ -221,6 +221,10 @@ export function activate(context: vscode.ExtensionContext) {
     if (event.affectsConfiguration('markdownInlineEditor.colors')) {
       decorator.recreateColorDependentTypes();
     }
+
+    if (event.affectsConfiguration('editor.fontSize') || event.affectsConfiguration('editor.lineHeight')) {
+      decorator.clearMathDecorationCache();
+    }
   });
 
   // Listen for theme changes to update code and color-dependent decoration types

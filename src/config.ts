@@ -58,6 +58,13 @@ export const config = {
         .get<boolean>('emojis.enabled', true);
     },
   },
+  math: {
+    enabled(): boolean {
+      return vscode.workspace
+        .getConfiguration(SECTION)
+        .get<boolean>('math.enabled', true);
+    },
+  },
   colors: {
     heading1(): string | undefined {
       return getColorConfig('heading1');

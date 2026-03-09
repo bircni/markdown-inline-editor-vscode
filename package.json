@@ -118,6 +118,12 @@
           "description": "Render emoji shortcodes (e.g., :smile:)",
           "markdownDescription": "Render emoji shortcodes (e.g., :smile:) inline in Markdown documents."
         },
+        "markdownInlineEditor.math.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Render LaTeX math inline ($...$ and $$...$$)",
+          "markdownDescription": "Render LaTeX math inline ($...$ and $$...$$). When disabled, math delimiters are shown as plain text."
+        },
         "markdownInlineEditor.colors.heading1": {
           "type": "string",
           "description": "Hex color for level-1 headings",
@@ -231,6 +237,8 @@
   },
   "dependencies": {
     "cheerio": "1.2.0",
+    "katex": "^0.16.11",
+    "mathjax-full": "^3.2.2",
     "mermaid": "10.9.5",
     "remark-gfm": "4.0.1",
     "remark-parse": "11.0.0",

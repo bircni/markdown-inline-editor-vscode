@@ -180,6 +180,7 @@ export enum ColorThemeKind {
 export const window = {
   createTextEditorDecorationType: (_options: any) => ({}),
   activeTextEditor: undefined as any,
+  visibleTextEditors: [] as any[],
   activeColorTheme: {
     kind: ColorThemeKind.Dark,
   },
