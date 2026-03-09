@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.18.0..v1.18.1) - 2026-03-09
+
+### Changed
+
+- **(docs)** exclude todo.md from feature outline validation - ([9395842](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/9395842a68112b5553215ab4fe9d281999f03e63))
+- **(features)** consolidate todo into single list, move latex-math to done - ([c3f6cc9](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/c3f6cc985ac5521c4bdf06a65d5d6dca8da0cb15))
+- **(specs)** add 004-code-block-math-environments spec and design artifacts - ([d35a104](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/d35a1048be1a645c3950dea6df32488d9301e2a0))
+- add .eslintignore - ([ae20179](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/ae20179cb385b8348e0edd456b80c8ce93f16bbe))
+
+### Fixed
+
+- **(math)** correct block math SVG height and body line count - ([1a79aa8](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/1a79aa806291b5ec47daba4ed93e654d9049fc9d))
+
 ## [1.18.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.17.0..v1.18.0) - 2026-03-09
 
 ### Added
