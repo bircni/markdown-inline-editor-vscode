@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.18.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.17.0..v1.18.0) - 2026-03-09
+
+### Added
+
+- **(math)** add support for inline and block LaTeX math rendering - ([dde7c27](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/dde7c27aad3d437bdf1b130422ccd731146f34bf))
+
+### Changed
+
+- **(spec)** mark US5 theme-appropriate math font color as broken - ([68871db](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/68871dbaa114bcd22903e3f8509b4179ef86da24))
+
 ## [1.17.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.16.2..v1.17.0) - 2026-03-08
 
 ### Added
