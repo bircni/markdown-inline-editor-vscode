@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.20.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.19.2..v1.20.0) - 2026-03-20
+
+### Added
+
+- **(decorations)** add customizable inline code background color ([#59](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/59)) - ([1efe8b9](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/1efe8b907fd723e71539e4b37eb0122eda3e9ee2))
+
+### Changed
+
+- sync syntax color docs, hex JSDoc, and contributors - ([551119f](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/551119f12799320c41c4e25df7ee84f050d1adc2))
+
 ## [1.19.2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.19.1..v1.19.2) - 2026-03-20
 
 ### Changed
