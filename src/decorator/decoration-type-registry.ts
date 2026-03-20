@@ -49,6 +49,7 @@ type RegistryOptions = {
   getLinkColor?: () => string | undefined;
   getListMarkerColor?: () => string | undefined;
   getInlineCodeColor?: () => string | undefined;
+  getInlineCodeBackgroundColor?: () => string | undefined;
   getEmphasisColor?: () => string | undefined;
   getBlockquoteColor?: () => string | undefined;
   getImageColor?: () => string | undefined;
@@ -101,7 +102,7 @@ export class DecorationTypeRegistry {
     this.italicDecorationType = ItalicDecorationType(this.options.getEmphasisColor?.());
     this.boldItalicDecorationType = BoldItalicDecorationType(this.options.getEmphasisColor?.());
     this.strikethroughDecorationType = StrikethroughDecorationType();
-    this.codeDecorationType = CodeDecorationType(this.options.getInlineCodeColor?.());
+    this.codeDecorationType = CodeDecorationType(this.options.getInlineCodeColor?.(), this.options.getInlineCodeBackgroundColor?.());
     this.codeBlockDecorationType = CodeBlockDecorationType();
     this.codeBlockLanguageDecorationType = CodeBlockLanguageDecorationType(this.options.getCodeBlockLanguageOpacity());
     this.selectionOverlayDecorationType = SelectionOverlayDecorationType();
@@ -176,7 +177,7 @@ export class DecorationTypeRegistry {
   recreateCodeDecorationType(): void {
     this.recreateDecorationType(
       this.codeDecorationType,
-      () => CodeDecorationType(this.options.getInlineCodeColor?.()),
+      () => CodeDecorationType(this.options.getInlineCodeColor?.(), this.options.getInlineCodeBackgroundColor?.()),
       (newType) => { this.codeDecorationType = newType; },
       'code'
     );
@@ -197,7 +198,7 @@ export class DecorationTypeRegistry {
     this.recreateDecorationType(this.blockquoteDecorationType, () => BlockquoteDecorationType(this.options.getBlockquoteColor?.()), (t) => { this.blockquoteDecorationType = t; }, 'blockquote');
     this.recreateDecorationType(this.listItemDecorationType, () => ListItemDecorationType(this.options.getListMarkerColor?.()), (t) => { this.listItemDecorationType = t; }, 'listItem');
     this.recreateDecorationType(this.orderedListItemDecorationType, () => OrderedListItemDecorationType(this.options.getListMarkerColor?.()), (t) => { this.orderedListItemDecorationType = t; }, 'orderedListItem');
-    this.recreateDecorationType(this.codeDecorationType, () => CodeDecorationType(this.options.getInlineCodeColor?.()), (t) => { this.codeDecorationType = t; }, 'code');
+    this.recreateDecorationType(this.codeDecorationType, () => CodeDecorationType(this.options.getInlineCodeColor?.(), this.options.getInlineCodeBackgroundColor?.()), (t) => { this.codeDecorationType = t; }, 'code');
     this.recreateDecorationType(this.boldDecorationType, () => BoldDecorationType(this.options.getEmphasisColor?.()), (t) => { this.boldDecorationType = t; }, 'bold');
     this.recreateDecorationType(this.italicDecorationType, () => ItalicDecorationType(this.options.getEmphasisColor?.()), (t) => { this.italicDecorationType = t; }, 'italic');
     this.recreateDecorationType(this.boldItalicDecorationType, () => BoldItalicDecorationType(this.options.getEmphasisColor?.()), (t) => { this.boldItalicDecorationType = t; }, 'boldItalic');
