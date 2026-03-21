@@ -1,4 +1,4 @@
-# CodeQL Advanced setup with custom config (excludes vendored Mermaid: assets/mermaid/**).
+# CodeQL Advanced setup with custom config (excludes assets/mermaid/**, tests: **/__tests__/**, src/test/**, **/*.test.ts/js).
 #
 # REQUIRED: Turn OFF "Default setup" for Code Scanning, or SARIF upload fails with:
 # "CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled"
