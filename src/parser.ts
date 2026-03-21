@@ -19,6 +19,7 @@ import type {
 import { getRemarkProcessorSync, getRemarkProcessor } from "./parser-remark";
 import { getEmojiMap } from "./emoji-map-loader";
 import { scanMathRegions } from "./math/math-scanner";
+import { config } from "./config";
 
 /**
  * Represents a decoration range in the markdown document.
@@ -41,6 +42,9 @@ export interface DecorationRange {
     fontStyle?: string;
     textDecoration?: string;
   };
+  slug?: string; // For type 'mention': segment after @ (e.g. username, org/team). Used by link provider to resolve URL. 
+  issueNumber?: number; // For type 'issueReference': issue/PR number. Used by link provider to resolve URL.
+  ownerRepo?: string; // For type 'issueReference' when repo-scoped (@user/repo#456): the "user/repo" part.
 }
 
 /**
@@ -127,7 +131,9 @@ export type DecorationType =
   | "tablePipe"
   | "tableSeparatorPipe"
   | "tableSeparatorDash"
-  | "tableCell";
+  | "tableCell"
+  | "mention"
+  | "issueReference";
 
 /**
  * Type for the unified processor used to parse markdown text to a Root AST node.
@@ -209,8 +215,13 @@ export class MarkdownParser {
    * @returns {ParseResult} Decorations and scopes, sorted by startPos
    */
   extractDecorationsWithScopes(text: string): ParseResult {
-    if (!text || typeof text !== 'string') {
-      return { decorations: [], scopes: [], mermaidBlocks: [], mathRegions: [] };
+    if (!text || typeof text !== "string") {
+      return {
+        decorations: [],
+        scopes: [],
+        mermaidBlocks: [],
+        mathRegions: [],
+      };
     }
 
     // Normalize line endings to \n for consistent position tracking
@@ -234,6 +245,11 @@ export class MarkdownParser {
 
       // Handle edge cases: empty image alt text that remark doesn't parse as Image node
       this.handleEmptyImageAlt(normalizedText, decorations);
+
+      // GitHub-style mentions and issue references (@username, @org/team, #123, @user/repo#456)
+      if (config.mentions.enabled()) {
+        this.scanMentionAndIssueRefs(normalizedText, decorations, scopes);
+      }
 
       // Safety net: Remove any markdown formatting decorations that fall within code blocks
       // Ancestor checks in processors prevent most cases, but this catches edge cases
@@ -269,7 +285,7 @@ export class MarkdownParser {
     text: string,
     decorations: DecorationRange[],
     scopes: ScopeRange[],
-    mermaidBlocks: MermaidBlock[]
+    mermaidBlocks: MermaidBlock[],
   ): void {
     // Track processed blockquote positions to avoid duplicates from nested blockquotes
     const processedBlockquotePositions = new Set<number>();
@@ -350,7 +366,13 @@ export class MarkdownParser {
               break;
 
             case "code":
-              this.processCodeBlock(node as Code, text, decorations, scopes, mermaidBlocks);
+              this.processCodeBlock(
+                node as Code,
+                text,
+                decorations,
+                scopes,
+                mermaidBlocks,
+              );
               break;
 
             case "link":
@@ -527,6 +549,122 @@ export class MarkdownParser {
       }
       return a.endPos - b.endPos;
     });
+  }
+
+  /**
+   * Scans normalized text for GitHub-style @mentions and #issue references.
+   * Pushes decoration ranges and scopes; excludes code blocks and email patterns.
+   */
+  private scanMentionAndIssueRefs(
+    text: string,
+    decorations: DecorationRange[],
+    scopes: ScopeRange[],
+  ): void {
+    const codeRanges = this.getCodeBlockRanges(scopes);
+    const inCode = (start: number, end: number) =>
+      codeRanges.some((r) => start < r.end && end > r.start);
+    const occupiedIssueRanges: Array<{ start: number; end: number }> = [];
+    const overlapsIssueRange = (start: number, end: number) =>
+      occupiedIssueRanges.some((r) => start < r.end && end > r.start);
+
+    // Match @user/repo#456 first (repo-scoped issue), then @org/team, then @username, then #123
+    const repoScopedRefRe =
+      /@([a-zA-Z0-9][a-zA-Z0-9-]*)\/([a-zA-Z0-9][a-zA-Z0-9-]*)#(\d+)/g;
+    let m: RegExpExecArray | null;
+    while ((m = repoScopedRefRe.exec(text)) !== null) {
+      const start = m.index;
+      const end = m.index + m[0].length;
+      if (inCode(start, end)) continue;
+      if (this.looksLikeEmailAt(text, start)) continue;
+      const ownerRepo = `${m[1]}/${m[2]}`;
+      decorations.push({
+        startPos: start,
+        endPos: end,
+        type: "issueReference",
+        issueNumber: parseInt(m[3], 10),
+        ownerRepo,
+      });
+      occupiedIssueRanges.push({ start, end });
+      this.addScope(scopes, start, end, "issueReference");
+    }
+
+    // @org/team (exactly one slash, token boundary after team segment)
+    const orgTeamRe =
+      /@([a-zA-Z0-9][a-zA-Z0-9-]*)\/([a-zA-Z0-9][a-zA-Z0-9-]*)(?=$|[^a-zA-Z0-9-])/g;
+    while ((m = orgTeamRe.exec(text)) !== null) {
+      const start = m.index;
+      const end = m.index + m[0].length;
+      if (inCode(start, end)) continue;
+      if (this.looksLikeEmailAt(text, start)) continue;
+      // Repo-scoped refs (@owner/repo#123) are handled above as issueReference.
+      if (text[end] === "#") continue;
+      decorations.push({
+        startPos: start,
+        endPos: end,
+        type: "mention",
+        slug: `${m[1]}/${m[2]}`,
+      });
+      this.addScope(scopes, start, end, "mention");
+    }
+
+    // @username (alphanumeric and hyphen, no leading hyphen)
+    const userRe = /@([a-zA-Z0-9][a-zA-Z0-9-]*)(?![a-zA-Z0-9_/-])/g;
+    while ((m = userRe.exec(text)) !== null) {
+      const start = m.index;
+      const end = m.index + m[0].length;
+      if (inCode(start, end)) continue;
+      if (this.looksLikeEmailAt(text, start)) continue;
+      decorations.push({
+        startPos: start,
+        endPos: end,
+        type: "mention",
+        slug: m[1],
+      });
+      this.addScope(scopes, start, end, "mention");
+    }
+
+    // #123 (digits only)
+    const issueRe = /#(\d+)/g;
+    while ((m = issueRe.exec(text)) !== null) {
+      const start = m.index;
+      const end = m.index + m[0].length;
+      if (inCode(start, end)) continue;
+      if (overlapsIssueRange(start, end)) continue;
+      decorations.push({
+        startPos: start,
+        endPos: end,
+        type: "issueReference",
+        issueNumber: parseInt(m[1], 10),
+      });
+      this.addScope(scopes, start, end, "issueReference");
+    }
+  }
+
+  /** Returns whether the @ at position atIdx appears to be part of an email (local@domain). */
+  private looksLikeEmailAt(text: string, atIdx: number): boolean {
+    let lo = atIdx - 1;
+    while (lo >= 0 && /[a-zA-Z0-9._%+-]/.test(text[lo])) lo--;
+    const localPart = text.slice(lo + 1, atIdx);
+    let hi = atIdx + 1;
+    while (hi < text.length && /[a-zA-Z0-9.-]/.test(text[hi])) hi++;
+    const domainPart = text.slice(atIdx + 1, hi);
+    if (!localPart.length || !domainPart.length) return false;
+    if (!/\./.test(domainPart)) return false;
+    return true;
+  }
+
+  /** Builds code block ranges from scopes for mention/ref exclusion. */
+  private getCodeBlockRanges(
+    scopes: ScopeRange[],
+  ): Array<{ start: number; end: number }> {
+    const out: Array<{ start: number; end: number }> = [];
+    for (const scope of scopes) {
+      if (scope.kind === "codeBlock" || scope.kind === "code") {
+        out.push({ start: scope.startPos, end: scope.endPos });
+      }
+    }
+    out.sort((a, b) => a.start - b.start);
+    return out;
   }
 
   /**
@@ -948,7 +1086,7 @@ export class MarkdownParser {
     text: string,
     decorations: DecorationRange[],
     scopes: ScopeRange[],
-    mermaidBlocks: MermaidBlock[]
+    mermaidBlocks: MermaidBlock[],
   ): void {
     if (!this.hasValidPosition(node)) return;
 
@@ -1094,7 +1232,7 @@ export class MarkdownParser {
     const closingLineEnd = text.indexOf("\n", closingFence);
     const closingEnd = closingLineEnd !== -1 ? closingLineEnd + 1 : codeEnd;
 
-    const isMermaid = node.lang?.trim() === 'mermaid';
+    const isMermaid = node.lang?.trim() === "mermaid";
 
     if (!isMermaid) {
       // Apply code block background to the entire block including fence lines
@@ -1102,21 +1240,22 @@ export class MarkdownParser {
       decorations.push({
         startPos: fenceStart,
         endPos: closingFenceEnd,
-        type: 'codeBlock',
+        type: "codeBlock",
       });
 
       // Hide the opening fence markers
       decorations.push({
         startPos: fenceStart,
         endPos: openingFenceEnd,
-        type: 'hide',
+        type: "hide",
       });
 
       // Find language identifier (between fence and newline)
       const languageStart = openingFenceEnd;
-      const languageEnd = openingLineEnd !== -1 && openingLineEnd < closingFence
-        ? openingLineEnd
-        : openingFenceEnd;
+      const languageEnd =
+        openingLineEnd !== -1 && openingLineEnd < closingFence
+          ? openingLineEnd
+          : openingFenceEnd;
 
       // Apply language identifier decoration if there's a language (not just whitespace)
       if (languageEnd > languageStart) {
@@ -1125,7 +1264,7 @@ export class MarkdownParser {
           decorations.push({
             startPos: languageStart,
             endPos: languageEnd,
-            type: 'codeBlockLanguage',
+            type: "codeBlockLanguage",
           });
         }
       }
@@ -1135,7 +1274,7 @@ export class MarkdownParser {
         decorations.push({
           startPos: openingLineEnd,
           endPos: openingLineEnd + 1,
-          type: 'hide',
+          type: "hide",
         });
       }
 
@@ -1143,7 +1282,7 @@ export class MarkdownParser {
       decorations.push({
         startPos: closingFence,
         endPos: closingEnd,
-        type: 'hide',
+        type: "hide",
       });
     } else {
       // For Mermaid blocks, hide the fence markers so only the SVG shows
@@ -1151,20 +1290,21 @@ export class MarkdownParser {
       decorations.push({
         startPos: fenceStart,
         endPos: openingFenceEnd,
-        type: 'hide',
+        type: "hide",
       });
 
       // Find language identifier (between fence and newline) and hide it
       const languageStart = openingFenceEnd;
-      const languageEnd = openingLineEnd !== -1 && openingLineEnd < closingFence 
-        ? openingLineEnd 
-        : openingFenceEnd;
+      const languageEnd =
+        openingLineEnd !== -1 && openingLineEnd < closingFence
+          ? openingLineEnd
+          : openingFenceEnd;
 
       if (languageEnd > languageStart) {
         decorations.push({
           startPos: languageStart,
           endPos: languageEnd,
-          type: 'hide',
+          type: "hide",
         });
       }
 
@@ -1173,7 +1313,7 @@ export class MarkdownParser {
         decorations.push({
           startPos: openingLineEnd,
           endPos: openingLineEnd + 1,
-          type: 'hide',
+          type: "hide",
         });
       }
 
@@ -1181,14 +1321,14 @@ export class MarkdownParser {
       decorations.push({
         startPos: closingFence,
         endPos: closingEnd,
-        type: 'hide',
+        type: "hide",
       });
     }
 
-    this.addScope(scopes, fenceStart, closingEnd, 'codeBlock');
+    this.addScope(scopes, fenceStart, closingEnd, "codeBlock");
 
     if (isMermaid) {
-      const source = node.value ?? '';
+      const source = node.value ?? "";
       // Fast newline count (avoid regex allocations in hot paths).
       let numLines = 1;
       for (let i = 0; i < source.length; i++) {
@@ -1236,68 +1376,72 @@ export class MarkdownParser {
       // Detect autolinks and bare links using AST structure: link text equals the URL
       // (or URL without mailto: prefix for email autolinks)
       const firstChild = node.children?.[0];
-      const linkText = (firstChild && firstChild.type === "text") ? firstChild.value : "";
+      const linkText =
+        firstChild && firstChild.type === "text" ? firstChild.value : "";
       const url = node.url || "";
       const urlWithoutMailto = url.replace(/^mailto:/, "");
-      const isAutolinkOrBareLink = linkText === url || linkText === urlWithoutMailto;
+      const isAutolinkOrBareLink =
+        linkText === url || linkText === urlWithoutMailto;
 
       if (isAutolinkOrBareLink) {
-      // Check if it's an autolink (has angle brackets) or bare link (no brackets)
-      const hasAngleBrackets = text[start] === '<' && text[end - 1] === '>';
+        // Check if it's an autolink (has angle brackets) or bare link (no brackets)
+        const hasAngleBrackets = text[start] === "<" && text[end - 1] === ">";
 
-      if (hasAngleBrackets) {
-        // Process autolink - use text child position for accurate content range
-        const textChild = firstChild && firstChild.type === "text" ? firstChild : null;
-        const contentStart = textChild?.position?.start.offset ?? (start + 1);
-        const contentEnd = textChild?.position?.end.offset ?? (end - 1);
+        if (hasAngleBrackets) {
+          // Process autolink - use text child position for accurate content range
+          const textChild =
+            firstChild && firstChild.type === "text" ? firstChild : null;
+          const contentStart = textChild?.position?.start.offset ?? start + 1;
+          const contentEnd = textChild?.position?.end.offset ?? end - 1;
 
-        // Hide opening angle bracket
-        decorations.push({
-          startPos: start,
-          endPos: start + 1,
-          type: "hide",
-        });
-
-        // Add link decoration for content (between angle brackets)
-        if (contentStart < contentEnd) {
+          // Hide opening angle bracket
           decorations.push({
-            startPos: contentStart,
-            endPos: contentEnd,
-            type: "link",
-            url: url, // Use URL from AST (remark-gfm already handles mailto: for emails)
+            startPos: start,
+            endPos: start + 1,
+            type: "hide",
           });
-        }
 
-        // Hide closing angle bracket
-        decorations.push({
-          startPos: end - 1,
-          endPos: end,
-          type: "hide",
-        });
+          // Add link decoration for content (between angle brackets)
+          if (contentStart < contentEnd) {
+            decorations.push({
+              startPos: contentStart,
+              endPos: contentEnd,
+              type: "link",
+              url: url, // Use URL from AST (remark-gfm already handles mailto: for emails)
+            });
+          }
 
-        // Add scope for reveal-on-select behavior
-        this.addScope(scopes, start, end, "link");
-      } else {
-        // Process bare link (no angle brackets) - just apply link decoration
-        const textChild = firstChild && firstChild.type === "text" ? firstChild : null;
-        const contentStart = textChild?.position?.start.offset ?? start;
-        const contentEnd = textChild?.position?.end.offset ?? end;
-
-        // Add link decoration for the URL/email text
-        if (contentStart < contentEnd) {
+          // Hide closing angle bracket
           decorations.push({
-            startPos: contentStart,
-            endPos: contentEnd,
-            type: "link",
-            url: url, // Use URL from AST (remark-gfm already handles mailto: for emails)
+            startPos: end - 1,
+            endPos: end,
+            type: "hide",
           });
-        }
 
-        // Add scope for reveal-on-select behavior
-        this.addScope(scopes, start, end, "link");
+          // Add scope for reveal-on-select behavior
+          this.addScope(scopes, start, end, "link");
+        } else {
+          // Process bare link (no angle brackets) - just apply link decoration
+          const textChild =
+            firstChild && firstChild.type === "text" ? firstChild : null;
+          const contentStart = textChild?.position?.start.offset ?? start;
+          const contentEnd = textChild?.position?.end.offset ?? end;
+
+          // Add link decoration for the URL/email text
+          if (contentStart < contentEnd) {
+            decorations.push({
+              startPos: contentStart,
+              endPos: contentEnd,
+              type: "link",
+              url: url, // Use URL from AST (remark-gfm already handles mailto: for emails)
+            });
+          }
+
+          // Add scope for reveal-on-select behavior
+          this.addScope(scopes, start, end, "link");
+        }
+        return;
       }
-      return;
-    }
     }
 
     // Regular bracket-style link: [text](url)
