@@ -1,6 +1,8 @@
-# CodeQL with custom config (excludes vendored Mermaid under assets/mermaid/).
-# If GitHub "Default setup" Code Scanning is also enabled, disable it under
-# Settings → Code security → Code scanning to avoid duplicate runs.
+# CodeQL Advanced setup with custom config (excludes vendored Mermaid: assets/mermaid/**).
+#
+# REQUIRED: Turn OFF "Default setup" for Code Scanning, or SARIF upload fails with:
+# "CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled"
+# Repo: Settings → Code security → Code scanning → disable Default / use Advanced only.
 name: CodeQL
 
 on:
@@ -35,15 +37,15 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           config-file: ./.github/codeql/codeql-config.yml
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: '/language:${{ matrix.language }}'
