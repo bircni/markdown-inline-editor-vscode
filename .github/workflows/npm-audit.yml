@@ -1,7 +1,7 @@
 # Dedicated workflow for npm dependency vulnerability checks.
 # Status badge (passing / failing) reflects whether high-or-worse advisories are present.
 # README: https://docs.github.com/en/actions/how-tos/monitor-workflows/add-a-status-badge
-name: Dependency vulnerabilities
+name: Dependency health
 
 on:
   push:

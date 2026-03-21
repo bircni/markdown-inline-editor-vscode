@@ -3,7 +3,7 @@
 # REQUIRED: Turn OFF "Default setup" for Code Scanning, or SARIF upload fails with:
 # "CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled"
 # Repo: Settings → Code security → Code scanning → disable Default / use Advanced only.
-name: CodeQL
+name: Code security scan
 
 on:
   push:

@@ -2,7 +2,7 @@
 
 <img src="assets/icon.png" align="right" alt="Markdown Inline Editor icon" width="120" height="120">
 
-[![CI/CD Status][ci-img]][ci] [![Dependency vulnerabilities][audit-img]][audit] [![VS Code Marketplace][marketplace-img]][marketplace] [![OpenVSX][openvsx-img]][openvsx] [![License: MIT][license-img]][license]
+[![Build & quality][ci-img]][ci] [![Dependency health][audit-img]][audit] [![Install on VS Code][marketplace-img]][marketplace] [![Get on Open VSX][openvsx-img]][openvsx] [![MIT License][license-img]][license]
 
 **Typora-like Markdown editing in VS Code.** Write in a clean, WYSIWYG-style view with context-aware syntax shadowing, **GFM pipe tables**, inline Mermaid and LaTeX math rendering, hover previews, and clickable task lists.
 
@@ -390,9 +390,9 @@ Special thanks to these projects, which inspired or enabled this extension:
 [marketplace]: https://marketplace.visualstudio.com/items?itemName=CodeSmith.markdown-inline-editor-vscode
 [openvsx]: https://open-vsx.org/extension/CodeSmith/markdown-inline-editor-vscode
 
-[marketplace-img]: https://img.shields.io/visual-studio-marketplace/v/CodeSmith.markdown-inline-editor-vscode?label=VS%20Code%20Marketplace
-[openvsx-img]: https://img.shields.io/open-vsx/v/CodeSmith/markdown-inline-editor-vscode?label=OpenVSX
-[license-img]: https://img.shields.io/badge/License-MIT-yellow.svg
+[marketplace-img]: https://img.shields.io/visual-studio-marketplace/v/CodeSmith.markdown-inline-editor-vscode?label=Install%20on%20VS%20Code&logo=visualstudiocode&logoColor=white
+[openvsx-img]: https://img.shields.io/open-vsx/v/CodeSmith/markdown-inline-editor-vscode?label=Get%20on%20Open%20VSX&logo=openvsx&logoColor=white
+[license-img]: https://img.shields.io/badge/License-MIT-555555?labelColor=blue
 
 [demo-mermaid]: https://github.com/user-attachments/assets/9898d617-acbb-4e81-944b-623d545a29ce
 [demo-checkbox]: https://github.com/user-attachments/assets/c9025dd2-c2ca-44e5-a501-c9638a5e60cc
