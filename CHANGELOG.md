@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.21.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.20.0..v1.21.0) - 2026-03-21
+
+### Added
+
+- **(decorations)** inherit markdown heading syntax colors when unset ([#60](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/60)) - ([2122f44](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/2122f447f89601ffb65586883aab85bfd69d931a))
+
 ## [1.20.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.19.2..v1.20.0) - 2026-03-20
 
 ### Added
