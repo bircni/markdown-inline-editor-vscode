@@ -101,6 +101,21 @@ describe('MarkdownParser', () => {
 });
 ```
 
+**E2E tests** run the extension inside a real editor instance and cover activation, decoration rendering, providers, and Mermaid diagram processing.
+
+```bash
+npm run test:e2e         # Run e2e tests in VS Code (auto-downloaded)
+npm run test:e2e:cursor  # Run e2e tests in your local Cursor install
+```
+
+The Cursor variant requires Cursor to be installed. It auto-detects the default install path per platform, or you can override it:
+
+```bash
+CURSOR_EXECUTABLE_PATH=/custom/path/Cursor npm run test:e2e:cursor
+```
+
+> **Note:** Cursor e2e tests are for local development only — CI always runs against VS Code.
+
 ### 5. Linting and Type Checking
 
 Before committing, ensure your code passes linting and type checking:
