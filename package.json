@@ -247,7 +247,7 @@
     "test:report": "NODE_OPTIONS=--experimental-vm-modules jest && echo 'HTML report generated at: dist/test-report/report.html'",
     "test:crlf": "NODE_OPTIONS=--experimental-vm-modules jest --testPathPatterns='(crlf|position-mapping|cache-crlf)'",
     "clean": "rimraf dist",
-    "copy:mermaid": "mkdir -p assets/mermaid && cp node_modules/mermaid/dist/mermaid.esm.min.mjs assets/mermaid/ && cp node_modules/mermaid/dist/mermaid-*.js assets/mermaid/ 2>/dev/null; cp node_modules/mermaid/dist/*Diagram*.js assets/mermaid/ 2>/dev/null; cp node_modules/mermaid/dist/*-*.js assets/mermaid/ 2>/dev/null || true; if [ -d node_modules/mermaid/dist/chunks ]; then cp -r node_modules/mermaid/dist/chunks assets/mermaid/; fi",
+    "copy:mermaid": "node scripts/copy-mermaid.js",
     "compile": "tsc --project tsconfig.build.json",
     "bundle": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js --sourcemap",
     "bundle:prod": "esbuild src/extension.ts --bundle --platform=node --format=cjs --target=node18 --external:vscode --outfile=dist/extension.js",

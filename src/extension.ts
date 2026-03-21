@@ -10,6 +10,7 @@ import { config } from './config';
 import { MarkdownParser } from './parser';
 import { MarkdownParseCache } from './markdown-parse-cache';
 import { initMermaidRenderer, disposeMermaidRenderer } from './mermaid/mermaid-renderer';
+import { processSvg } from './mermaid/svg-processor';
 
 /**
  * Checks if a recommended extension is installed and optionally shows a notification.
@@ -80,6 +81,10 @@ export type ExtensionApi = {
   parseCache: MarkdownParseCache;
   /** The live decorator instance; exposes isEnabled(), activeEditor, etc. */
   decorator: Decorator;
+  /** SVG processing utilities exposed for integration tests. */
+  svgProcessor: {
+    processSvg: (svgString: string, height: number, maxWidth?: number) => string;
+  };
 };
 
 /**
@@ -259,7 +264,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
   context.subscriptions.push({ dispose: () => decorator.dispose() });
   context.subscriptions.push({ dispose: () => linkClickHandler.dispose() });
 
-  return { parseCache, decorator };
+  return { parseCache, decorator, svgProcessor: { processSvg } };
 }
 
 /**

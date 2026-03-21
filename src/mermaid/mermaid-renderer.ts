@@ -177,10 +177,12 @@ export async function renderMermaidSvg(
   const numLines = options.numLines || 5;
   const height = options.height || ((numLines + 2) * lineHeight);
 
-  // Estimate max width from font size to prevent diagrams from overflowing the editor viewport.
-  // Monospace character width is roughly 0.6× font size; assume ~90 visible columns as a
-  // generous but bounded default so even wide charts stay within the editor pane.
-  const maxWidth = Math.round(fontSize * 0.6 * 90);
+  // Estimate the editor viewport width to cap only genuinely oversized diagrams.
+  // Monospace character width ≈ 0.6× font size. We use 200 columns as a generous
+  // full-width estimate so normal diagrams (flowcharts, gantt, sequence) render at
+  // their natural size, and only truly huge charts (> ~1680px at 14px font) are
+  // constrained. Using fewer columns caused normal charts to be squished (#50).
+  const maxWidth = Math.round(fontSize * 0.6 * 200);
 
   return getMermaidDecoration(source, darkMode, height, options.fontFamily, maxWidth);
 }

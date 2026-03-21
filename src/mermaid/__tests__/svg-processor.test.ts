@@ -60,12 +60,13 @@ describe('processSvg – maxWidth constraint (issue #50)', () => {
 
     it('constrains an extremely wide gantt-style diagram', () => {
       // Simulate a large gantt: 5000×300
+      // maxWidth = 1680 ≈ 14px font * 0.6 * 200 cols (the renderer's default)
       const svg = makeSvg(5000, 300);
-      const result = processSvg(svg, 300, 756); // 756 ≈ 14px font * 0.6 * 90 cols
+      const result = processSvg(svg, 300, 1680);
       const { width, height } = parseDimensions(result);
-      expect(width).toBe(756);
-      // Height is scaled proportionally: round(300 * (756 / 5000))
-      expect(height).toBe(Math.round(300 * 756 / 5000));
+      expect(width).toBe(1680);
+      // Height is scaled proportionally: round(300 * (1680 / 5000))
+      expect(height).toBe(Math.round(300 * 1680 / 5000));
     });
 
     it('preserves aspect ratio when constraining width', () => {
