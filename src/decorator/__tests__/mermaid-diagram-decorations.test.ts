@@ -1,5 +1,5 @@
 import { MermaidDiagramDecorations } from '../mermaid-diagram-decorations';
-import { window, ColorThemeKind } from '../../test/__mocks__/vscode';
+import { window, ColorThemeKind, Range } from '../../test/__mocks__/vscode';
 
 /** Minimal TextEditor stub — tracks setDecorations calls per type. */
 function makeEditor() {
@@ -15,7 +15,10 @@ function makeEditor() {
 }
 
 function makeRanges(n = 1) {
-  return Array.from({ length: n }, (_, i) => ({ start: { line: i, character: 0 }, end: { line: i, character: 5 } }));
+  return Array.from(
+    { length: n },
+    (_, i) => new Range({ line: i, character: 0 }, { line: i, character: 5 }),
+  );
 }
 
 describe('MermaidDiagramDecorations', () => {
