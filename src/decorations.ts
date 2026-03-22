@@ -463,6 +463,22 @@ export function HorizontalRuleDecorationType(color?: string | ThemeColor) {
 }
 
 /**
+ * Creates the before block options for checkbox decorations.
+ * Shared between CheckboxUncheckedDecorationType and CheckboxCheckedDecorationType.
+ */
+function createCheckboxBeforeOptions(resolvedColor: string | ThemeColor, boxSize: string) {
+  return {
+    contentText: ' ',
+    color: resolvedColor,
+    height: boxSize,
+    width: boxSize,
+    border: "1px solid",
+    borderColor: resolvedColor,
+    textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; transform: translateY(-0.1em); margin-right: -${boxSize}; cursor: pointer;`,
+  };
+}
+
+/**
  * Creates a decoration type for unchecked checkbox styling.
  *
  * Replaces [ ] with an empty checkbox symbol (☐).
@@ -475,26 +491,19 @@ export function CheckboxUncheckedDecorationType(color?: string | ThemeColor) {
   const resolvedColor = color ?? new ThemeColor('editor.foreground');
   const boxSize = '1em';
   const gapSize = '0.6em';
+  const checkboxPadding = '0.2em';
 
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;',
-    before: {
-      contentText: ' ',
-      color: resolvedColor,
-      height: boxSize,
-      width: boxSize,
-      border: "1px solid",
-      borderColor: resolvedColor,
-      // margin-right: -boxSize pulls the 'after' element on top
-      textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; transform: translateY(-0.1em); margin-right: -${boxSize}; cursor: pointer;`,
-    },
+    before: createCheckboxBeforeOptions(resolvedColor, boxSize),
     after: {
       contentText: ' ',
+      color: resolvedColor,
       textDecoration: `
         width: ${boxSize};
         cursor: pointer;
         margin-right: ${gapSize};
-        margin-left: 0.2em;
+        margin-left: ${checkboxPadding};
       `
     }
   });
@@ -513,30 +522,23 @@ export function CheckboxCheckedDecorationType(color?: string | ThemeColor) {
   const resolvedColor = color ?? new ThemeColor('editor.foreground');
   const boxSize = '1em';
   const gapSize = '0.6em';
+  const checkboxPadding = '0.2em';
+  const checkboxVerticalOffset = '-0.1em';
 
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;',
-    before: {
-      contentText: ' ',
-      color: resolvedColor,
-      height: boxSize,
-      width: boxSize,
-      border: "1px solid",
-      borderColor: resolvedColor,
-      // Box alignment
-      textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; transform: translateY(-0.1em); margin-right: -${boxSize}; cursor: pointer;`,
-    },
+    before: createCheckboxBeforeOptions(resolvedColor, boxSize),
     after: {
       contentText: '✔',
       color: resolvedColor,
       textDecoration: `
         display: inline-block;
         position: relative;
-        top: -0.1em;
+        top: ${checkboxVerticalOffset};
         width: ${boxSize};
         cursor: pointer;
         margin-right: ${gapSize};
-        margin-left: 0.2em;
+        margin-left: ${checkboxPadding};
       `
     }
   });
