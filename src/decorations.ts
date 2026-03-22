@@ -272,7 +272,7 @@ const HEADING_CONFIG = [
   { size: '120%', bold: true },  // H3: Just above body text
   { size: '110%', bold: false }, // H4: Subtle bump
   { size: '100%', bold: false }, // H5: Same size, usually distinct by color/bold
-  { size: '90%',  bold: false }, // H6: Slightly diminished
+  { size: '90%', bold: false }, // H6: Slightly diminished
 ];
 /**
  * Creates a heading decoration type with the specified level.
@@ -473,12 +473,30 @@ export function HorizontalRuleDecorationType(color?: string | ThemeColor) {
  */
 export function CheckboxUncheckedDecorationType(color?: string | ThemeColor) {
   const resolvedColor = color ?? new ThemeColor('editor.foreground');
+  const boxSize = '1em';
+  const gapSize = '0.6em';
+
   return window.createTextEditorDecorationType({
-    textDecoration: 'none; display: none;', // Hide the original [ ]
+    textDecoration: 'none; display: none;',
     before: {
-      contentText: '☐',
+      contentText: ' ',
       color: resolvedColor,
+      height: boxSize,
+      width: boxSize,
+      border: "1px solid",
+      borderColor: resolvedColor,
+      // margin-right: -boxSize pulls the 'after' element on top
+      textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; transform: translateY(-0.1em); margin-right: -${boxSize}; cursor: pointer;`,
     },
+    after: {
+      contentText: ' ',
+      textDecoration: `
+        width: ${boxSize};
+        cursor: pointer;
+        margin-right: ${gapSize};
+        margin-left: 0.2em;
+      `
+    }
   });
 }
 
@@ -493,12 +511,31 @@ export function CheckboxUncheckedDecorationType(color?: string | ThemeColor) {
  */
 export function CheckboxCheckedDecorationType(color?: string | ThemeColor) {
   const resolvedColor = color ?? new ThemeColor('editor.foreground');
+  const boxSize = '1em';
+  const gapSize = '0.6em';
+
   return window.createTextEditorDecorationType({
-    textDecoration: 'none; display: none;', // Hide the original [x]
+    textDecoration: 'none; display: none;',
     before: {
-      contentText: '☑',
+      contentText: ' ',
       color: resolvedColor,
+      height: boxSize,
+      width: boxSize,
+      border: "1px solid",
+      borderColor: resolvedColor,
+      // Box alignment
+      textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; transform: translateY(-0.1em); margin-right: -${boxSize}; cursor: pointer;`,
     },
+    after: {
+      contentText: '✔',
+      color: resolvedColor,
+      textDecoration: `
+        width: ${boxSize};
+        cursor: pointer;
+        margin-right: ${gapSize};
+        margin-left: 0.2em;
+      `
+    }
   });
 }
 
