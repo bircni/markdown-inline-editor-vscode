@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.21.1..v1.22.0) - 2026-03-22
+
+### Added
+
+- **(e2e)** add VS Code integration test suite - ([4897197](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/48971973b0f2fc1d19028e36b57ce4bbcfde8728))
+
+### Changed
+
+- **(ci)** add explicit GITHUB_TOKEN permissions to CI jobs - ([9e4ce71](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/9e4ce7176f8f7adf553f180c2f8457ee6ba8d953))
+- **(codeql)** exclude test files from CodeQL analysis - ([39c50a2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/39c50a20ee341df244ec1188b6a1a6887f1ab3f1))
+- **(decorator)** use Range mock in mermaid diagram decoration tests - ([59c6414](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/59c6414ebea9c76446ba0520836aea57ab1cd21a))
+- **(readme)** friendlier badge names; rename workflows for marketing clarity - ([da221fa](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/da221fa9e779865076baafb9f9175cd5cd3c66bb))
+- **(security)** add CodeQL workflow and exclude vendored mermaid - ([8e95ebf](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/8e95ebfbdd3199918829841cdbeaff1f88b28364))
+- enhance unit test coverage with 80% gate - ([9b7a0c2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/9b7a0c2eb84d0b98c36fc6bef5859b372f65b010))
+
+### Fixed
+
+- support skill, markdoc, and mdc language IDs (#58, #61) - ([61cf0e2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/61cf0e262a262ce97fcce8d834a65adb243dd683))
+
+### Ci
+
+- **(codeql)** upgrade to codeql-action v4 and document default-setup conflict - ([b681aa5](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/b681aa5a90ec7f1e02b83706f6489db874ef5384))
+- add npm-audit workflow for dependency vulnerability badge - ([ea7147a](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/ea7147a00ee3f75a3e38553178d4822974c36150))
+
 ## [1.21.1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.21.0..v1.21.1) - 2026-03-21
 
 ### Changed
