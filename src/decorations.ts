@@ -474,7 +474,7 @@ function createCheckboxBeforeOptions(resolvedColor: string | ThemeColor, boxSize
     width: boxSize,
     border: "1px solid",
     borderColor: resolvedColor,
-    textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; transform: translateY(-0.1em); margin-right: -${boxSize}; cursor: pointer;`,
+    textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; margin-right: -${boxSize}; cursor: pointer;`,
   };
 }
 
@@ -523,7 +523,6 @@ export function CheckboxCheckedDecorationType(color?: string | ThemeColor) {
   const boxSize = '1em';
   const gapSize = '0.6em';
   const checkboxPadding = '0.2em';
-  const checkboxVerticalOffset = '-0.1em';
 
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;',
@@ -534,7 +533,6 @@ export function CheckboxCheckedDecorationType(color?: string | ThemeColor) {
       textDecoration: `
         display: inline-block;
         position: relative;
-        top: ${checkboxVerticalOffset};
         width: ${boxSize};
         cursor: pointer;
         margin-right: ${gapSize};
