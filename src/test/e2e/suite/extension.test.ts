@@ -77,6 +77,41 @@ suite('Extension E2E', () => {
     await vscode.commands.executeCommand('mdInline.toggleDecorations');
   });
 
+  // Issue #28: per-file toggle state
+  // Toggling decorations on file A must not affect file B.
+  test('#28 — toggle is per-file: disabling one file leaves others enabled', async () => {
+    const docA = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: '# File A\n**bold**',
+    });
+    const docB = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: '# File B\n_italic_',
+    });
+
+    // Show file A and disable decorations for it
+    await vscode.window.showTextDocument(docA);
+    await delay(300);
+    assert.ok(decoratorApi?.isEnabled(), 'File A should start enabled');
+    await vscode.commands.executeCommand('mdInline.toggleDecorations');
+    await delay(200);
+    assert.strictEqual(decoratorApi?.isEnabled(), false, 'File A should now be disabled');
+
+    // Switch to file B — it should remain enabled
+    await vscode.window.showTextDocument(docB);
+    await delay(300);
+    assert.ok(decoratorApi?.isEnabled(), 'File B should still be enabled');
+
+    // Switch back to file A — it should still be disabled
+    await vscode.window.showTextDocument(docA);
+    await delay(300);
+    assert.strictEqual(decoratorApi?.isEnabled(), false, 'File A should still be disabled');
+
+    // Re-enable file A to leave state clean for subsequent tests
+    await vscode.commands.executeCommand('mdInline.toggleDecorations');
+    await delay(200);
+  });
+
   // Regression test for issue #58:
   // SKILL.md files get languageId 'skill' from the SKILL language extension.
   // Fix: 'skill' is now included in isMarkdownDocument()'s allowed list, and

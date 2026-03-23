@@ -106,7 +106,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
 
   const parser = new MarkdownParser();
   const parseCache = new MarkdownParseCache(parser);
-  const decorator = new Decorator(parseCache);
+  const decorator = new Decorator(parseCache, context.workspaceState);
   const diffViewApplyDecorations = config.diffView.applyDecorations();
   decorator.updateDiffViewDecorationSetting(!diffViewApplyDecorations);
   
@@ -153,8 +153,11 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
     'mdInline.toggleDecorations',
     () => {
       const enabled = decorator.toggleDecorations();
+      const fileName = decorator.activeEditor
+        ? vscode.workspace.asRelativePath(decorator.activeEditor.document.uri)
+        : 'this file';
       vscode.window.showInformationMessage(
-        `Markdown decorations ${enabled ? 'enabled' : 'disabled'}`
+        `Markdown decorations ${enabled ? 'enabled' : 'disabled'} for ${fileName}`
       );
     }
   );
@@ -207,6 +210,12 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
     }
   });
 
+  const renameFiles = vscode.workspace.onDidRenameFiles((event) => {
+    for (const { oldUri, newUri } of event.files) {
+      decorator.renameFile(oldUri.toString(), newUri.toString());
+    }
+  });
+
   const changeConfiguration = vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration('markdownInlineEditor.defaultBehaviors.diffView.applyDecorations')) {
       const diffViewApplyDecorations = config.diffView.applyDecorations();
@@ -248,6 +257,7 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
   context.subscriptions.push(changeActiveTextEditor);
   context.subscriptions.push(changeTextEditorSelection);
   context.subscriptions.push(changeDocument);
+  context.subscriptions.push(renameFiles);
   context.subscriptions.push(changeConfiguration);
   context.subscriptions.push(changeColorTheme);
   context.subscriptions.push(linkProviderDisposable);

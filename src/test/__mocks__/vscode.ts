@@ -236,6 +236,7 @@ export class WorkspaceEdit {
 export const workspace = {
   onDidChangeTextDocument: () => ({ dispose: () => {} }),
   onDidChangeConfiguration: () => ({ dispose: () => {} }),
+  onDidRenameFiles: () => ({ dispose: () => {} }),
   applyEdit: jest.fn().mockResolvedValue(true),
   getConfiguration: (section?: string) => ({
     get: <T>(key: string, defaultValue: T): T => {

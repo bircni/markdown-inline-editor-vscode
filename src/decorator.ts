@@ -1,4 +1,4 @@
-import { Range, Position, TextEditor, TextDocument, TextDocumentChangeEvent, window, TextEditorSelectionChangeKind, ColorThemeKind, workspace, DecorationOptions } from 'vscode';
+import { Range, Position, TextEditor, TextDocument, TextDocumentChangeEvent, window, TextEditorSelectionChangeKind, ColorThemeKind, workspace, DecorationOptions, Memento } from 'vscode';
 import { createHash } from 'crypto';
 import { DecorationRange, DecorationType, MermaidBlock, MathRegion, ScopeRange } from './parser';
 import { mapNormalizedToOriginal } from './position-mapping';
@@ -12,6 +12,9 @@ import { MermaidDiagramDecorations } from './decorator/mermaid-diagram-decoratio
 import { MathDecorations } from './math/math-decorations';
 import { renderMermaidSvg, svgToDataUri, createErrorSvg } from './mermaid/mermaid-renderer';
 import { MermaidHoverIndicatorDecorationType } from './decorations';
+
+/** Workspace state key prefix for per-file decoration toggle persistence. */
+const DECORATION_STATE_KEY_PREFIX = 'mdInline.decorationsEnabled';
 
 /**
  * Performance and caching constants.
@@ -114,8 +117,11 @@ export class Decorator {
   /** requestIdleCallback handle for idle updates */
   private idleCallbackHandle: number | undefined;
 
-  /** Whether decorations are enabled or disabled */
-  private decorationsEnabled = true;
+  /** Per-file decoration enabled state, keyed by URI string */
+  private fileDecorationState = new Map<string, boolean>();
+
+  /** Workspace state for persisting per-file toggle state across sessions */
+  private workspaceState?: Memento;
 
   /** Whether to skip decorations in diff views (inverse of applyDecorations setting) */
   private skipDecorationsInDiffView = true;
@@ -126,8 +132,9 @@ export class Decorator {
   private mermaidUpdateToken = 0;
   private mermaidHoverIndicatorDecorationType = MermaidHoverIndicatorDecorationType();
 
-  constructor(parseCache: MarkdownParseCache) {
+  constructor(parseCache: MarkdownParseCache, workspaceState?: Memento) {
     this.parseCache = parseCache;
+    this.workspaceState = workspaceState;
     this.decorationTypes = new DecorationTypeRegistry({
       getGhostFaintOpacity: () => this.getGhostFaintOpacity(),
       getFrontmatterDelimiterOpacity: () => this.getFrontmatterDelimiterOpacity(),
@@ -281,9 +288,14 @@ export class Decorator {
    * @returns {boolean} The new state (true = enabled, false = disabled)
    */
   toggleDecorations(): boolean {
-    this.decorationsEnabled = !this.decorationsEnabled;
+    const uri = this.activeEditor?.document.uri.toString();
+    if (!uri) { return true; }
 
-    if (this.decorationsEnabled) {
+    const next = !this.isEnabledForUri(uri);
+    this.fileDecorationState.set(uri, next);
+    void this.workspaceState?.update(`${DECORATION_STATE_KEY_PREFIX}.${uri}`, next);
+
+    if (next) {
       // Re-enable: update decorations immediately
       this.updateDecorationsForSelection();
     } else {
@@ -291,16 +303,59 @@ export class Decorator {
       this.clearAllDecorations();
     }
 
-    return this.decorationsEnabled;
+    return next;
   }
 
   /**
-   * Check if decorations are currently enabled.
-   * 
+   * Check if decorations are currently enabled for the active file.
+   *
    * @returns {boolean} True if decorations are enabled
    */
   isEnabled(): boolean {
-    return this.decorationsEnabled;
+    const uri = this.activeEditor?.document.uri.toString();
+    if (!uri) { return true; }
+    return this.isEnabledForUri(uri);
+  }
+
+  /**
+   * Get the enabled state for a specific file URI, loading from persisted
+   * state on first access.
+   *
+   * @param {string} uri - The file URI string
+   * @returns {boolean} True if decorations are enabled for that file
+   */
+  private isEnabledForUri(uri: string): boolean {
+    let cached = this.fileDecorationState.get(uri);
+    if (cached === undefined) {
+      cached = this.workspaceState?.get<boolean>(`${DECORATION_STATE_KEY_PREFIX}.${uri}`, true) ?? true;
+      this.fileDecorationState.set(uri, cached);
+    }
+    return cached;
+  }
+
+  /**
+   * Migrate toggle state when a file is renamed.
+   *
+   * @param {string} oldUri - The old file URI string
+   * @param {string} newUri - The new file URI string
+   */
+  renameFile(oldUri: string, newUri: string): void {
+    const oldKey = `${DECORATION_STATE_KEY_PREFIX}.${oldUri}`;
+    const newKey = `${DECORATION_STATE_KEY_PREFIX}.${newUri}`;
+
+    // Migrate in-memory state
+    const cachedValue = this.fileDecorationState.get(oldUri);
+    if (cachedValue !== undefined) {
+      this.fileDecorationState.set(newUri, cachedValue);
+      this.fileDecorationState.delete(oldUri);
+    }
+
+    // Migrate persisted state, using cached value when available to avoid a redundant read
+    const persistedValue = cachedValue ?? this.workspaceState?.get<boolean | undefined>(oldKey, undefined);
+    if (persistedValue !== undefined) {
+      void this.workspaceState?.update(newKey, persistedValue);
+      void this.workspaceState?.update(oldKey, undefined);
+    }
   }
 
   /**
@@ -343,8 +398,10 @@ export class Decorator {
       return;
     }
 
-    // Early exit if decorations are disabled
-    if (!this.decorationsEnabled) {
+    const document = this.activeEditor.document;
+
+    // Early exit if decorations are disabled for this file
+    if (!this.isEnabledForUri(document.uri.toString())) {
       return;
     }
 
@@ -358,8 +415,6 @@ export class Decorator {
       this.clearAllDecorations();
       return;
     }
-
-    const document = this.activeEditor.document;
 
     // Parse document (uses cache if version unchanged)
     const version = document.version;
