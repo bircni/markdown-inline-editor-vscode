@@ -6,6 +6,13 @@ import { window, ThemeColor, ColorThemeKind } from 'vscode';
  */
 const BRIGHTNESS_OVERLAY_OPACITY = 0.1;
 
+/** Size of the checkbox box (width and height). */
+const CHECKBOX_BOX_SIZE = '1em';
+/** Gap between checkbox and adjacent text. */
+const CHECKBOX_GAP_SIZE = '0.6em';
+/** Left padding applied after the checkbox. */
+const CHECKBOX_PADDING = '0.2em';
+
 /**
  * Determines if the current theme is dark or high contrast.
  *
@@ -466,15 +473,16 @@ export function HorizontalRuleDecorationType(color?: string | ThemeColor) {
  * Creates the before block options for checkbox decorations.
  * Shared between CheckboxUncheckedDecorationType and CheckboxCheckedDecorationType.
  */
-function createCheckboxBeforeOptions(resolvedColor: string | ThemeColor, boxSize: string) {
+function createCheckboxBeforeOptions(resolvedColor: string | ThemeColor) {
   return {
     contentText: ' ',
     color: resolvedColor,
-    height: boxSize,
-    width: boxSize,
-    border: "1px solid",
+    height: CHECKBOX_BOX_SIZE,
+    width: CHECKBOX_BOX_SIZE,
+    border: '1px solid',
     borderColor: resolvedColor,
-    textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; margin-right: -${boxSize}; cursor: pointer;`,
+    // Negative margin-right pulls the 'after' element inside the box border.
+    textDecoration: `display: inline-block; box-sizing: border-box; vertical-align: middle; margin-right: -${CHECKBOX_BOX_SIZE}; cursor: pointer;`,
   };
 }
 
@@ -489,21 +497,20 @@ function createCheckboxBeforeOptions(resolvedColor: string | ThemeColor, boxSize
  */
 export function CheckboxUncheckedDecorationType(color?: string | ThemeColor) {
   const resolvedColor = color ?? new ThemeColor('editor.foreground');
-  const boxSize = '1em';
-  const gapSize = '0.6em';
-  const checkboxPadding = '0.2em';
 
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;',
-    before: createCheckboxBeforeOptions(resolvedColor, boxSize),
+    before: createCheckboxBeforeOptions(resolvedColor),
     after: {
       contentText: ' ',
       color: resolvedColor,
       textDecoration: `
-        width: ${boxSize};
+        display: inline-block;
+        position: relative;
+        width: ${CHECKBOX_BOX_SIZE};
         cursor: pointer;
-        margin-right: ${gapSize};
-        margin-left: ${checkboxPadding};
+        margin-right: ${CHECKBOX_GAP_SIZE};
+        margin-left: ${CHECKBOX_PADDING};
       `
     }
   });
@@ -520,23 +527,20 @@ export function CheckboxUncheckedDecorationType(color?: string | ThemeColor) {
  */
 export function CheckboxCheckedDecorationType(color?: string | ThemeColor) {
   const resolvedColor = color ?? new ThemeColor('editor.foreground');
-  const boxSize = '1em';
-  const gapSize = '0.6em';
-  const checkboxPadding = '0.2em';
 
   return window.createTextEditorDecorationType({
     textDecoration: 'none; display: none;',
-    before: createCheckboxBeforeOptions(resolvedColor, boxSize),
+    before: createCheckboxBeforeOptions(resolvedColor),
     after: {
       contentText: '✔',
       color: resolvedColor,
       textDecoration: `
         display: inline-block;
         position: relative;
-        width: ${boxSize};
+        width: ${CHECKBOX_BOX_SIZE};
         cursor: pointer;
-        margin-right: ${gapSize};
-        margin-left: ${checkboxPadding};
+        margin-right: ${CHECKBOX_GAP_SIZE};
+        margin-left: ${CHECKBOX_PADDING};
       `
     }
   });
