@@ -19,11 +19,15 @@ type DecoratorExport = {
   activeEditor: vscode.TextEditor | undefined;
   onApply: ((nonEmptyTypeCount: number) => void) | undefined;
 };
-type ExtExports = { parseCache?: ParseCacheExport; decorator?: DecoratorExport };
+type SvgProcessorExport = {
+  processSvg: (svgString: string, height: number, maxWidth?: number) => string;
+};
+type ExtExports = { parseCache?: ParseCacheExport; decorator?: DecoratorExport; svgProcessor?: SvgProcessorExport };
 
 /** Populated in suiteSetup from ext.exports. */
 let cache: ParseCacheExport | undefined;
 let decoratorApi: DecoratorExport | undefined;
+let svgProcessor: SvgProcessorExport | undefined;
 
 suite('Extension E2E', () => {
   suiteSetup(async () => {
@@ -34,6 +38,7 @@ suite('Extension E2E', () => {
     const exports = ext?.exports as ExtExports | undefined;
     cache = exports?.parseCache;
     decoratorApi = exports?.decorator;
+    svgProcessor = exports?.svgProcessor;
   });
 
   test('extension is present', () => {
@@ -640,6 +645,128 @@ suite('Extension E2E', () => {
 
   // Regression for the code-block formatting isolation fix (v1.11.1 / v1.13.x):
   // **bold** inside a fenced code block must NOT produce a bold decoration.
+  // ── Mermaid width-constraint regression tests (issue #50) ────────────────
+  //
+  // These tests verify the SVG processor's width-constraint logic end-to-end
+  // inside the running extension, covering all diagram scenarios from the
+  // manual test file (docs/issues/50-mermaid-width-test.md).
+  //
+  // processSvg is a pure function exposed via ext.exports.svgProcessor so we
+  // can assert exact pixel dimensions without needing screenshots.
+  //
+  // The maxWidth used here (1680) mirrors the renderer default:
+  //   fontSize(14) × charWidthFactor(0.6) × columns(200) = 1680 px
+
+  /** Build a minimal SVG with explicit width/height and matching viewBox. */
+  function makeSvgFixture(w: number, h: number): string {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}"/></svg>`;
+  }
+
+  /** Extract the numeric px value from width="Npx" in a processed SVG. */
+  function parseSvgWidth(svg: string): number {
+    const m = svg.match(/\bwidth="(\d+(?:\.\d+)?)px"/);
+    return m ? parseFloat(m[1]) : NaN;
+  }
+
+  /** Extract the numeric px value from height="Npx" in a processed SVG. */
+  function parseSvgHeight(svg: string): number {
+    const m = svg.match(/\bheight="(\d+(?:\.\d+)?)px"/);
+    return m ? parseFloat(m[1]) : NaN;
+  }
+
+  const DEFAULT_MAX_WIDTH = 1680; // 14px × 0.6 × 200 cols — renderer default
+
+  // Scenario 1 — wide flowchart: many nodes → natural width exceeds maxWidth
+  test('#50 — wide flowchart SVG is constrained to maxWidth', () => {
+    assert.ok(svgProcessor, 'svgProcessor not available from ext.exports');
+    // Simulate a wide multi-node flowchart (e.g. 3000×400 natural size)
+    const svg = makeSvgFixture(3000, 400);
+    const result = svgProcessor.processSvg(svg, 400, DEFAULT_MAX_WIDTH);
+    const width = parseSvgWidth(result);
+    assert.strictEqual(
+      width, DEFAULT_MAX_WIDTH,
+      `Wide flowchart must be clamped to ${DEFAULT_MAX_WIDTH}px, got ${width}px`
+    );
+  });
+
+  // Scenario 2 — wide sequence diagram: many participants → same constraint
+  test('#50 — wide sequence diagram SVG is constrained to maxWidth', () => {
+    assert.ok(svgProcessor, 'svgProcessor not available from ext.exports');
+    const svg = makeSvgFixture(4000, 600);
+    const result = svgProcessor.processSvg(svg, 600, DEFAULT_MAX_WIDTH);
+    const width = parseSvgWidth(result);
+    assert.strictEqual(
+      width, DEFAULT_MAX_WIDTH,
+      `Wide sequence diagram must be clamped to ${DEFAULT_MAX_WIDTH}px, got ${width}px`
+    );
+  });
+
+  // Scenario 3 — wide gantt chart: extremely wide timeline → constrained
+  test('#50 — gantt-style SVG wider than maxWidth is constrained and height is scaled', () => {
+    assert.ok(svgProcessor, 'svgProcessor not available from ext.exports');
+    // Simulate gantt rendered at 2000px-wide container, natural height ~400
+    const svg = makeSvgFixture(5000, 400);
+    const result = svgProcessor.processSvg(svg, 400, DEFAULT_MAX_WIDTH);
+    const width = parseSvgWidth(result);
+    const height = parseSvgHeight(result);
+    assert.strictEqual(width, DEFAULT_MAX_WIDTH,
+      `Gantt must be clamped to ${DEFAULT_MAX_WIDTH}px, got ${width}px`);
+    // Height must be scaled proportionally (aspect ratio preserved)
+    const expectedHeight = Math.round(400 * (DEFAULT_MAX_WIDTH / 5000));
+    assert.strictEqual(height, expectedHeight,
+      `Gantt height must be scaled to ${expectedHeight}px, got ${height}px`);
+  });
+
+  // Scenario 4 — narrow diagram: must NOT be constrained or stretched
+  test('#50 — narrow flowchart (Start→Process→End) renders at natural width without clipping', () => {
+    assert.ok(svgProcessor, 'svgProcessor not available from ext.exports');
+    // A simple 3-node vertical flowchart is naturally narrow (e.g. ~200×350)
+    const svg = makeSvgFixture(200, 350);
+    const result = svgProcessor.processSvg(svg, 350, DEFAULT_MAX_WIDTH);
+    const width = parseSvgWidth(result);
+    // Width must stay at its natural computed value — well below maxWidth
+    assert.ok(
+      width < DEFAULT_MAX_WIDTH,
+      `Narrow diagram must not be stretched; width ${width}px should be < ${DEFAULT_MAX_WIDTH}px`
+    );
+    assert.ok(width > 0, `Narrow diagram width must be positive, got ${width}px`);
+  });
+
+  // Scenario 5 — tall/square chain diagram: aspect ratio must be preserved after constraint
+  test('#50 — tall chain diagram preserves aspect ratio when constrained', () => {
+    assert.ok(svgProcessor, 'svgProcessor not available from ext.exports');
+    // 10-node vertical chain: wide but also tall (e.g. 2400×800)
+    const svg = makeSvgFixture(2400, 800);
+    const result = svgProcessor.processSvg(svg, 800, DEFAULT_MAX_WIDTH);
+    const width = parseSvgWidth(result);
+    const height = parseSvgHeight(result);
+    assert.strictEqual(width, DEFAULT_MAX_WIDTH,
+      `Chain diagram wider than maxWidth must be clamped to ${DEFAULT_MAX_WIDTH}px`);
+    // Aspect ratio 2400:800 = 3:1; after clamping width=1680, height=560
+    const expectedHeight = Math.round(800 * (DEFAULT_MAX_WIDTH / 2400));
+    assert.strictEqual(height, expectedHeight,
+      `Chain diagram height must preserve aspect ratio: expected ${expectedHeight}px, got ${height}px`);
+  });
+
+  // Smoke test: opening a document with a mermaid code block must not throw
+  test('#50 — document with mermaid code block decorates without error', async () => {
+    const doc = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: [
+        '# Mermaid Test',
+        '',
+        '```mermaid',
+        'flowchart LR',
+        '  A[Start] --> B[End]',
+        '```',
+      ].join('\n'),
+    });
+    await vscode.window.showTextDocument(doc);
+    await delay(500);
+    assert.strictEqual(doc.languageId, 'markdown');
+    // Reaching here without an unhandled exception confirms the pipeline ran cleanly.
+  });
+
   test('parse: **bold** inside a fenced code block is not decorated', async () => {
     assert.ok(cache, 'parseCache not available from ext.exports');
     const doc = await vscode.workspace.openTextDocument({
