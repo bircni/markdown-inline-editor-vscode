@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.22.1..v1.23.0) - 2026-03-26
+
+### Added
+
+- **(decorator)** add per-file toggle state with session persistence ([#28](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/28)) - ([487ad71](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/487ad71d5221f58c361e4d3be7a7b058fc377baf))
+
+### Changed
+
+- **(deps)** bump picomatch - ([fbce4c0](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/fbce4c0294e6cd39ceeb9114bf1d4c0acda13825))
+- add Cursor e2e test support with configuration and noise suppression - ([2f594a2](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/2f594a2b10f905211ef9671ee6ec8634b9ed6e8b))
+
+### Fixed
+
+- **(mermaid)** constrain diagram width to editor viewport ([#50](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/issues/50)) - ([f3dd74f](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/f3dd74fc87604c3723d28f1832db24bb2b835beb))
+- **(mermaid)** correct width constraint, cross-platform build, e2e tests - ([43d398e](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/commit/43d398e5919d1a2a06473422bf051ed79446466f))
+
 ## [1.22.1](https://github.com/SeardnaSchmid/markdown-inline-editor-vscode/compare/v1.22.0..v1.22.1) - 2026-03-24
 
 ### Ci
