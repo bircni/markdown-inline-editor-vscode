@@ -1,35 +1,19 @@
 #!/usr/bin/env node
-/* eslint-env node */
 
 /**
- * Cross-platform replacement for the copy:mermaid shell one-liner.
- * Copies mermaid dist files into assets/mermaid/.
+ * Copies the Mermaid ESM bundle used by the webview into assets/mermaid/.
+ * Wipes the destination first so upgrades (v10 → v11, chunk layout changes)
+ * do not leave stale or duplicate files.
  */
 
-const fs   = require('fs');
+const fs = require('fs');
 const path = require('path');
 
-const ROOT    = path.join(__dirname, '..');
-const SRC     = path.join(ROOT, 'node_modules', 'mermaid', 'dist');
-const DEST    = path.join(ROOT, 'assets', 'mermaid');
-const CHUNKS  = path.join(SRC, 'chunks');
-
-/** Copy a single file, silently skipping if it does not exist. */
-function copyFile(src, destDir) {
-  if (!fs.existsSync(src)) return;
-  fs.copyFileSync(src, path.join(destDir, path.basename(src)));
-}
-
-/** Copy all files in srcDir whose names match predicate into destDir. */
-function copyMatching(srcDir, destDir, predicate) {
-  if (!fs.existsSync(srcDir)) return;
-  for (const name of fs.readdirSync(srcDir)) {
-    const full = path.join(srcDir, name);
-    if (fs.statSync(full).isFile() && predicate(name)) {
-      fs.copyFileSync(full, path.join(destDir, name));
-    }
-  }
-}
+const ROOT = path.join(__dirname, '..');
+const SRC = path.join(ROOT, 'node_modules', 'mermaid', 'dist');
+const DEST = path.join(ROOT, 'assets', 'mermaid');
+const ENTRY = path.join(SRC, 'mermaid.esm.min.mjs');
+const CHUNKS_MIN = path.join(SRC, 'chunks', 'mermaid.esm.min');
 
 /** Recursively copy a directory tree. */
 function copyDir(src, dest) {
@@ -46,23 +30,20 @@ function copyDir(src, dest) {
   }
 }
 
-// ── main ──────────────────────────────────────────────────────────────────────
+if (!fs.existsSync(ENTRY)) {
+  console.error('Expected Mermaid bundle at:', ENTRY);
+  console.error('Run npm install and ensure the mermaid dependency is installed.');
+  process.exit(1);
+}
+if (!fs.existsSync(CHUNKS_MIN)) {
+  console.error('Expected Mermaid chunks at:', CHUNKS_MIN);
+  process.exit(1);
+}
 
+fs.rmSync(DEST, { recursive: true, force: true });
 fs.mkdirSync(DEST, { recursive: true });
 
-// mermaid.esm.min.mjs
-copyFile(path.join(SRC, 'mermaid.esm.min.mjs'), DEST);
-
-// mermaid-*.js
-copyMatching(SRC, DEST, n => n.startsWith('mermaid-') && n.endsWith('.js'));
-
-// *Diagram*.js
-copyMatching(SRC, DEST, n => n.includes('Diagram') && n.endsWith('.js'));
-
-// *-*.js  (catches remaining chunk/helper files)
-copyMatching(SRC, DEST, n => /^[^.]+-.+\.js$/.test(n));
-
-// chunks/ sub-directory (if present)
-copyDir(CHUNKS, path.join(DEST, 'chunks'));
+fs.copyFileSync(ENTRY, path.join(DEST, 'mermaid.esm.min.mjs'));
+copyDir(CHUNKS_MIN, path.join(DEST, 'chunks', 'mermaid.esm.min'));
 
 console.log('✅ Mermaid assets copied to assets/mermaid/');

@@ -26,7 +26,7 @@
     "clean"
   ],
   "engines": {
-    "vscode": "^1.88.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Formatters",
@@ -266,35 +266,36 @@
   },
   "dependencies": {
     "cheerio": "1.2.0",
-    "katex": "^0.16.11",
+    "katex": "^0.16.44",
     "mathjax-full": "^3.2.2",
-    "mermaid": "10.9.5",
+    "mermaid": "11.13.0",
     "remark-gfm": "4.0.1",
     "remark-parse": "11.0.0",
     "unified": "11.0.5",
     "unist-util-visit": "5.1.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tsconfig/node-lts": "^24.0.0",
     "@types/jest": "^30.0.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "^25.0.3",
+    "@types/node": "^25.5.0",
     "@types/unist": "^3.0.3",
-    "@types/vscode": "1.88.0",
-    "@typescript-eslint/eslint-plugin": "^8.50.0",
-    "@typescript-eslint/parser": "^8.50.0",
-    "@vscode/test-cli": "^0.0.11",
+    "@types/vscode": "1.100.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.2",
+    "@typescript-eslint/parser": "^8.57.2",
+    "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "@vscode/vsce": "^3.7.1",
-    "esbuild": "^0.27.2",
-    "eslint": "^9.39.2",
+    "esbuild": "^0.27.4",
+    "eslint": "^10.1.0",
     "git-cliff": "^2.12.0",
-    "jest": "^30.2.0",
+    "jest": "^30.3.0",
     "jest-html-reporters": "^3.1.7",
-    "ovsx": "^0.10.7",
-    "rimraf": "^6.1.2",
+    "ovsx": "^0.10.10",
+    "rimraf": "^6.1.3",
     "ts-jest": "^29.4.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.50.0"
+    "typescript-eslint": "^8.57.2"
   }
 }

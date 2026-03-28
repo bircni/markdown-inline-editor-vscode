@@ -252,7 +252,7 @@ export class CodeBlockHoverProvider implements vscode.HoverProvider {
       console.warn('[Code Block Hover] Mermaid render failed:', error instanceof Error ? error.message : error);
       // Create error SVG to display in hover instead of returning undefined
       // Extract meaningful error message
-      let errorMessage = 'Rendering failed';
+      let errorMessage: string;
       if (error instanceof Error) {
         errorMessage = error.message || error.toString() || 'Rendering failed';
       } else if (typeof error === 'string') {
