@@ -1,8 +1,9 @@
 import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 // ESLint flat config for VS Code extension
-export default tseslint.config(
+export default defineConfig(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -27,12 +28,17 @@ export default tseslint.config(
     ignores: [
       'out',
       'dist',
+      '.vscode-test/**',
+      '.vscode-test.mjs',
+      '.vscode-test-cursor.mjs',
+      'build',
       'assets/**',
       '**/*.d.ts',
       'node_modules',
       'coverage',
       'test-report',
       '*.js',
+      '**/*.min.js',
       'examples/**',
     ],
   },

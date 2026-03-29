@@ -609,7 +609,7 @@ export class Decorator {
             } catch (error) {
               console.warn('Mermaid render failed:', error instanceof Error ? error.message : error);
               // Create error SVG to display instead of silently failing.
-              let errorMessage = 'Rendering failed';
+              let errorMessage: string;
               if (error instanceof Error) {
                 errorMessage = error.message || error.toString() || 'Rendering failed';
               } else if (typeof error === 'string') {

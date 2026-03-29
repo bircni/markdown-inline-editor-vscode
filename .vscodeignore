@@ -55,6 +55,8 @@ test-*.md
 *.test.ts
 **/__tests__/**
 dist/test-report/**
+dist/test
+dist/coverage
 
 # CI/CD
 .github/**
@@ -68,3 +70,6 @@ eslint.config.mjs
 scripts/**
 cliff.toml
 .eslintignore
+.vscode-test-cursor.mjs
+.vscode-test.mjs
+tsconfig.e2e.json

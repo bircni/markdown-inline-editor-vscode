@@ -15,7 +15,8 @@ function run(cmd, opts = {}) {
   try {
     return execSync(cmd, { stdio: "pipe", encoding: "utf8", ...opts }).trim();
   } catch (err) {
-    throw new Error(`Command failed: ${cmd}\n${err.message}`);
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Command failed: ${cmd}\n${message}`, { cause: err });
   }
 }
 

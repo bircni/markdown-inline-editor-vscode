@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-env node */
 
 /**
  * Validates that all feature files in docs/features/ follow the correct outline structure.

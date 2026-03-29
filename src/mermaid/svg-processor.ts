@@ -112,9 +112,6 @@ export function processSvg(svgString: string, height: number, maxWidth?: number)
   if (!calculatedWidth || calculatedWidth <= 0) {
     // For wide charts (like gantt), assume at least 2:1 ratio
     calculatedWidth = Math.max(400, height * 2);
-    if (!aspectRatio) {
-      aspectRatio = calculatedWidth / height;
-    }
   }
 
   // Constrain to maxWidth, scaling height proportionally to preserve aspect ratio
