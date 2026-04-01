@@ -19,6 +19,8 @@ import { DecoratorUpdateScheduler } from './decorator/update-scheduler';
 import { MathDecorations } from './math/math-decorations';
 import { MermaidHoverIndicatorDecorationType } from './decorations';
 import { isSupportedMarkdownLanguage } from './language-support';
+import { logDebug, logPerformanceMetric } from './logging';
+import { applyMathDecorationsForEditor } from './decorator/math-region-application';
 
 /**
  * Performance and caching constants.
@@ -282,6 +284,7 @@ export class Decorator {
 
     // Early exit if decorations are disabled for this file
     if (!this.isEnabledForUri(document.uri.toString())) {
+      logDebug('skip decoration update for disabled file', { uri: document.uri.toString() });
       return;
     }
 
@@ -292,21 +295,32 @@ export class Decorator {
 
     // Check if we should skip decorations in diff mode
     if (this.skipDecorationsInDiffView && this.isDiffEditor()) {
+      logDebug('skip decoration update in diff view', { uri: document.uri.toString() });
       this.clearAllDecorations();
       return;
     }
 
     // Parse document (uses cache if version unchanged)
+    const cycleStart = Date.now();
     const version = document.version;
+    const parseStart = Date.now();
     const { decorations, scopes, text, mermaidBlocks, mathRegions } = this.parseDocument(document);
+    const parseDurationMs = Date.now() - parseStart;
 
     // Re-validate version before applying (race condition protection)
     if (document.version !== version) {
+      logDebug('skip stale decoration update', {
+        uri: document.uri.toString(),
+        scheduledVersion: version,
+        currentVersion: document.version,
+      });
       return; // Document changed during parse, skip this update
     }
 
     // Filter decorations based on selections (pass original text for offset adjustment)
+    const filterStart = Date.now();
     const filtered = this.filterDecorations(decorations, scopes, text);
+    const filterDurationMs = Date.now() - filterStart;
 
     // Apply decorations
     this.applyDecorations(filtered);
@@ -318,6 +332,18 @@ export class Decorator {
       }
     }
     void this.updateMermaidDiagrams(mermaidBlocks, text, document.version);
+    logPerformanceMetric('decorator.update', {
+      uri: document.uri.toString(),
+      version,
+      parseMs: parseDurationMs,
+      filterMs: filterDurationMs,
+      totalMs: Date.now() - cycleStart,
+      decorations: decorations.length,
+      scopes: scopes.length,
+      mermaidBlocks: mermaidBlocks.length,
+      mathRegions: mathRegions.length,
+      filteredDecorationTypes: filtered.size,
+    });
   }
 
   /**
@@ -326,21 +352,17 @@ export class Decorator {
    */
   private applyMathDecorations(mathRegions: MathRegion[], normalizedText: string): void {
     if (!this.activeEditor) return;
-    const editor = this.activeEditor;
-    const regionsWithRanges = mathRegions.map((region) => {
-      const inside = this.isSelectionOrCursorInsideOffsets(
-        region.startPos,
-        region.endPos,
-        normalizedText,
-        editor.selections,
-        editor.document
-      );
-      return {
-        region,
-        range: inside ? null : this.createRange(region.startPos, region.endPos, normalizedText),
-      };
-    });
-    this.mathDecorations.apply(editor, regionsWithRanges);
+    applyMathDecorationsForEditor(
+      this.activeEditor,
+      mathRegions,
+      normalizedText,
+      this.activeEditor.selections,
+      this.activeEditor.document,
+      (startPos, endPos, originalText) => this.createRange(startPos, endPos, originalText),
+      (startPos, endPos, text, selections, document) =>
+        this.isSelectionOrCursorInsideOffsets(startPos, endPos, text, selections, document),
+      this.mathDecorations
+    );
   }
 
   /**

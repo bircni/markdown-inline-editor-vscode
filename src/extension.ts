@@ -10,6 +10,7 @@ import { processSvg } from './mermaid/svg-processor';
 import { checkRecommendedExtensions } from './recommendations';
 import { registerEventHandlers } from './registration/register-event-handlers';
 import { registerProviders } from './registration/register-providers';
+import { disposeLogger } from './logging';
 
 /**
  * Public API exposed via `vscode.extensions.getExtension(id).exports`.
@@ -53,11 +54,13 @@ export function activate(context: vscode.ExtensionContext): ExtensionApi {
     ...eventDisposables,
     ...commandDisposables,
     { dispose: () => decorator.dispose() },
+    { dispose: () => disposeLogger() },
   );
 
   return { parseCache, decorator, svgProcessor: { processSvg } };
 }
 
 export function deactivate(): void {
+  disposeLogger();
   disposeMermaidRenderer();
 }

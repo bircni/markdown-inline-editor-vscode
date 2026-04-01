@@ -6,6 +6,7 @@ import {
   resolveInteractionTarget,
   toInteractionUri,
 } from "./link-interactions/shared";
+import { logWarn } from "./logging";
 
 /**
  * Handles single-click navigation for markdown links and images.
@@ -102,7 +103,7 @@ export class LinkClickHandler {
       }
       await vscode.commands.executeCommand("vscode.open", toInteractionUri(target));
     } catch (error) {
-      console.warn("Failed to open link:", error);
+      logWarn('Failed to open link', error);
     }
   }
 

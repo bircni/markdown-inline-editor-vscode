@@ -5,6 +5,7 @@ import { mapNormalizedToOriginal } from '../position-mapping';
 import { renderMermaidSvg, svgToDataUri, createErrorSvg } from '../mermaid/mermaid-renderer';
 import { MermaidDiagramDecorations } from './mermaid-diagram-decorations';
 import { createRange, isSelectionOrCursorInsideOffsets } from './editor-decoration-applier';
+import { logWarn } from '../logging';
 
 type MermaidBlockKeyCacheEntry = {
   theme: 'default' | 'dark';
@@ -129,7 +130,7 @@ export class MermaidUpdateCoordinator {
               const svg = await renderMermaidSvg(block.source, { theme, fontFamily, numLines: block.numLines });
               return svgToDataUri(svg);
             } catch (error) {
-              console.warn('Mermaid render failed:', error instanceof Error ? error.message : error);
+              logWarn('Mermaid render failed', error);
               const message = error instanceof Error
                 ? (error.message || error.toString() || 'Rendering failed')
                 : (typeof error === 'string' ? error : String(error) || 'Rendering failed');

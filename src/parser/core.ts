@@ -65,6 +65,8 @@ import { getRemarkProcessorSync, getRemarkProcessor } from "../parser-remark";
 import { getEmojiMap } from "../emoji-map-loader";
 import { scanMathRegions } from "../math/math-scanner";
 import { config } from "../config";
+import { logError, logWarn } from "../logging";
+import { normalizeToLF } from "../position-mapping";
 import {
   DecorationRange,
   DecorationType,
@@ -164,8 +166,7 @@ export class MarkdownParser {
 
     // Normalize line endings to \n for consistent position tracking
     // Optimization: Only normalize if document contains CRLF
-    const normalizedText =
-      text.indexOf("\r") !== -1 ? text.replace(/\r\n|\r/g, "\n") : text;
+    const normalizedText = normalizeToLF(text);
 
     const decorations: DecorationRange[] = [];
     const scopes: ScopeRange[] = [];
@@ -197,7 +198,7 @@ export class MarkdownParser {
       decorations.sort((a, b) => a.startPos - b.startPos);
     } catch (error) {
       // Gracefully handle parse errors
-      console.error("Error parsing markdown:", error);
+      logError('Error parsing markdown', error);
     }
 
     return {
@@ -386,7 +387,7 @@ export class MarkdownParser {
         } catch (error) {
           // Gracefully handle invalid positions or processing errors
           // Individual methods still validate, so this catches unexpected issues
-          console.warn("Error processing AST node:", node.type, error);
+          logWarn('Error processing AST node', error, { nodeType: node.type });
         }
       },
     );

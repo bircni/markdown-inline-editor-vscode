@@ -218,6 +218,10 @@ export const window = {
     lastTextEditorDecorationTypeOptions = options;
     return { dispose: jest.fn() };
   }),
+  createOutputChannel: jest.fn(() => ({
+    appendLine: jest.fn(),
+    dispose: jest.fn(),
+  })),
   activeTextEditor: undefined as any,
   visibleTextEditors: [] as any[],
   activeColorTheme: {

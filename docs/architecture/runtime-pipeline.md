@@ -30,6 +30,10 @@ The runtime is intentionally split into a small set of stages:
    - Orchestrates filtered rendering
    - Delegates state, scheduling, Mermaid rendering, and low-level application to `decorator/` helpers
 
+7. `logging.ts`
+   - Owns the shared output channel
+   - Centralizes warning/error reporting and opt-in performance metrics
+
 ## Design Intent
 
 The structure is aimed at reducing growth pressure on single files:
@@ -38,6 +42,7 @@ The structure is aimed at reducing growth pressure on single files:
 - parser types are stable and importable without pulling in the parser implementation
 - link interactions have one shared resolution path
 - decorator internals are split by responsibility: scheduling, state, application, async render coordination
+- debug and performance diagnostics are opt-in and written to a single output channel
 
 ## Current Boundaries
 
@@ -46,6 +51,7 @@ The structure is aimed at reducing growth pressure on single files:
 - Internal helper modules should remain behavior-preserving and low-level
 - New user-facing commands should land in `src/commands/`
 - New registration wiring should land in `src/registration/`
+- Runtime warnings should use `src/logging.ts` instead of direct `console.*` calls
 
 ## Refactor Rule
 

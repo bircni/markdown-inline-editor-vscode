@@ -141,6 +141,18 @@
           "description": "Override clickable mention and issue reference links",
           "markdownDescription": "Override git-remote context auto-detection for clickable mention and issue links. `true` forces links on; `false` forces links off; leave unset to use origin remote auto-detection."
         },
+        "markdownInlineEditor.debug.logging.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Markdown Inline Editor debug logging",
+          "markdownDescription": "Write debug and warning messages to the `Markdown Inline Editor` output channel."
+        },
+        "markdownInlineEditor.debug.performance.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable performance metric logging",
+          "markdownDescription": "Write parse and decoration timing metrics to the `Markdown Inline Editor` output channel."
+        },
         "markdownInlineEditor.colors.heading1": {
           "type": "string",
           "description": "Hex color for level-1 headings",
