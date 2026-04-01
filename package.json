@@ -35,6 +35,7 @@
   ],
   "activationEvents": [
     "onLanguage:markdown",
+    "onLanguage:mdx",
     "onLanguage:skill",
     "onLanguage:markdoc",
     "onLanguage:mdc",

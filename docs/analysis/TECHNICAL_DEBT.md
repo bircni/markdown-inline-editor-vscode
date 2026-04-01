@@ -14,8 +14,8 @@ This document tracks technical debt items that don't block current functionality
 
 ### 3. Large Class: Decorator
 
-**Status:** Open  
-**Location:** `src/decorator.ts` (920 lines)
+**Status:** Partially Addressed  
+**Location:** `src/decorator.ts`, `src/decorator/`
 
 **Issue:**
 - `Decorator` class is large and handles multiple responsibilities:
@@ -30,13 +30,15 @@ This document tracks technical debt items that don't block current functionality
 - Difficult to test individual concerns
 - Risk of merge conflicts
 
-**Recommendation:**
-- Consider splitting into smaller classes:
-  - `DecorationCache` - handles LRU caching
-  - `DecorationApplier` - applies decorations to editor
-  - `DecorationFilter` - filters decorations based on selection
-  - Keep `Decorator` as orchestrator
-- Only refactor if class continues to grow or becomes hard to maintain
+**Progress:**
+- Extracted per-file state handling to `src/decorator/file-decoration-state.ts`
+- Extracted update scheduling to `src/decorator/update-scheduler.ts`
+- Extracted low-level application helpers to `src/decorator/editor-decoration-applier.ts`
+- Extracted Mermaid async rendering coordination to `src/decorator/mermaid-update-coordinator.ts`
+
+**Remaining Recommendation:**
+- Continue moving feature-specific rendering logic out of `Decorator`
+- Keep `Decorator` as orchestrator/facade only
 
 **Related Files:**
 - `src/decorator.ts`
@@ -194,6 +196,7 @@ private logDebug(message: string, ...args: any[]): void {
 **Related Files:**
 - `src/decorator.ts` (caching strategy, debouncing)
 - `src/position-mapping.ts` (CRLF handling)
+- `docs/architecture/runtime-pipeline.md` (runtime structure and boundaries)
 
 ---
 
