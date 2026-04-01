@@ -303,9 +303,8 @@ export class Decorator {
     // Parse document (uses cache if version unchanged)
     const cycleStart = Date.now();
     const version = document.version;
-    const parseStart = Date.now();
     const { decorations, scopes, text, mermaidBlocks, mathRegions } = this.parseDocument(document);
-    const parseDurationMs = Date.now() - parseStart;
+    const parseDurationMs = Date.now() - cycleStart;
 
     // Re-validate version before applying (race condition protection)
     if (document.version !== version) {
@@ -332,18 +331,20 @@ export class Decorator {
       }
     }
     void this.updateMermaidDiagrams(mermaidBlocks, text, document.version);
-    logPerformanceMetric('decorator.update', {
-      uri: document.uri.toString(),
-      version,
-      parseMs: parseDurationMs,
-      filterMs: filterDurationMs,
-      totalMs: Date.now() - cycleStart,
-      decorations: decorations.length,
-      scopes: scopes.length,
-      mermaidBlocks: mermaidBlocks.length,
-      mathRegions: mathRegions.length,
-      filteredDecorationTypes: filtered.size,
-    });
+    if (config.debug.performanceEnabled()) {
+      logPerformanceMetric('decorator.update', {
+        uri: document.uri.toString(),
+        version,
+        parseMs: parseDurationMs,
+        filterMs: filterDurationMs,
+        totalMs: Date.now() - cycleStart,
+        decorations: decorations.length,
+        scopes: scopes.length,
+        mermaidBlocks: mermaidBlocks.length,
+        mathRegions: mathRegions.length,
+        filteredDecorationTypes: filtered.size,
+      });
+    }
   }
 
   /**
@@ -356,11 +357,6 @@ export class Decorator {
       this.activeEditor,
       mathRegions,
       normalizedText,
-      this.activeEditor.selections,
-      this.activeEditor.document,
-      (startPos, endPos, originalText) => this.createRange(startPos, endPos, originalText),
-      (startPos, endPos, text, selections, document) =>
-        this.isSelectionOrCursorInsideOffsets(startPos, endPos, text, selections, document),
       this.mathDecorations
     );
   }

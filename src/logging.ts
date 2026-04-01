@@ -38,18 +38,19 @@ export function logDebug(message: string, details?: Record<string, unknown>): vo
   writeLine('debug', message, details);
 }
 
-export function logWarn(message: string, error?: unknown, details?: Record<string, unknown>): void {
-  writeLine('warn', message, {
+function logWithError(level: 'warn' | 'error', message: string, error?: unknown, details?: Record<string, unknown>): void {
+  writeLine(level, message, {
     ...details,
     ...(error === undefined ? {} : { error: stringifyError(error) }),
   });
 }
 
+export function logWarn(message: string, error?: unknown, details?: Record<string, unknown>): void {
+  logWithError('warn', message, error, details);
+}
+
 export function logError(message: string, error?: unknown, details?: Record<string, unknown>): void {
-  writeLine('error', message, {
-    ...details,
-    ...(error === undefined ? {} : { error: stringifyError(error) }),
-  });
+  logWithError('error', message, error, details);
 }
 
 export function logPerformanceMetric(metric: string, details: Record<string, unknown>): void {
