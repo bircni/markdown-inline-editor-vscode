@@ -394,7 +394,6 @@ export class Decorator {
       return false;
     }
 
-    // Check the active editor first
     if (isDiffLikeUri(this.activeEditor.document.uri)) {
       return true;
     }
