@@ -62,6 +62,10 @@ export class Decorator {
 
   private decorationTypes: DecorationTypeRegistry;
   private mermaidDecorations = new MermaidDiagramDecorations();
+  private readonly mermaidCoordinator = new MermaidUpdateCoordinator(
+    this.mermaidDecorations,
+    PERFORMANCE_CONSTANTS.MERMAID_MAX_CONCURRENCY
+  );
   private mathDecorations = new MathDecorations();
   private mermaidHoverIndicatorDecorationType = MermaidHoverIndicatorDecorationType();
   private readonly fileDecorationState: FileDecorationStateStore;
@@ -419,22 +423,11 @@ export class Decorator {
     }
 
     const editor = this.activeEditor;
-    await new MermaidUpdateCoordinator(
-      this.mermaidDecorations,
-      PERFORMANCE_CONSTANTS.MERMAID_MAX_CONCURRENCY
-    ).update(
+    await this.mermaidCoordinator.update(
       editor,
       mermaidBlocks,
       text,
       documentVersion,
-      (startPos, endPos, originalText) => this.createRange(startPos, endPos, originalText),
-      (startPos, endPos, normalizedText) => this.isSelectionOrCursorInsideOffsets(
-        startPos,
-        endPos,
-        normalizedText,
-        editor.selections,
-        editor.document
-      ),
       this.mermaidHoverIndicatorDecorationType
     );
   }

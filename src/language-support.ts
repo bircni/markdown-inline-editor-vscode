@@ -12,9 +12,7 @@ export const SUPPORTED_MARKDOWN_LANGUAGE_IDS = [
 ] as const;
 
 export function isSupportedMarkdownLanguage(languageId: string): boolean {
-  return SUPPORTED_MARKDOWN_LANGUAGE_IDS.includes(
-    languageId as (typeof SUPPORTED_MARKDOWN_LANGUAGE_IDS)[number]
-  );
+  return (SUPPORTED_MARKDOWN_LANGUAGE_IDS as readonly string[]).includes(languageId);
 }
 
 export const FILE_BACKED_MARKDOWN_SELECTOR: vscode.DocumentSelector =

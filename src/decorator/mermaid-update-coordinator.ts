@@ -4,6 +4,7 @@ import type { MermaidBlock } from '../parser';
 import { mapNormalizedToOriginal } from '../position-mapping';
 import { renderMermaidSvg, svgToDataUri, createErrorSvg } from '../mermaid/mermaid-renderer';
 import { MermaidDiagramDecorations } from './mermaid-diagram-decorations';
+import { createRange, isSelectionOrCursorInsideOffsets } from './editor-decoration-applier';
 
 type MermaidBlockKeyCacheEntry = {
   theme: 'default' | 'dark';
@@ -71,10 +72,7 @@ export class MermaidUpdateCoordinator {
     mermaidBlocks: MermaidBlock[],
     normalizedText: string,
     documentVersion: number,
-    createRange: (startPos: number, endPos: number, originalText?: string) => Range | null,
-    isSelectionInside: (startPos: number, endPos: number, normalizedText: string) => boolean,
-    hoverIndicatorDecorationType: { dispose(): void }
-      & { key?: string }, // structural compatibility for decoration type
+    hoverIndicatorDecorationType: { dispose(): void } & { key?: string },
   ): Promise<void> {
     if (mermaidBlocks.length === 0) {
       this.mermaidDecorations.clear(editor);
@@ -103,11 +101,11 @@ export class MermaidUpdateCoordinator {
           return null;
         }
 
-        if (isSelectionInside(block.startPos, block.endPos, normalizedText)) {
+        if (isSelectionOrCursorInsideOffsets(block.startPos, block.endPos, normalizedText, editor.selections, editor.document)) {
           return null;
         }
 
-        const range = createRange(block.startPos, block.endPos, normalizedText);
+        const range = createRange(editor, block.startPos, block.endPos, normalizedText);
         if (!range) {
           return null;
         }
