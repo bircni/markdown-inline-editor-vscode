@@ -173,12 +173,20 @@ class MockTextDocument {
 export const TextDocument = MockTextDocument as any;
 
 class MockTextEditor {
+  public selection: MockSelection;
+
   constructor(
     public document: MockTextDocument,
     public selections: MockSelection[],
-  ) {}
+  ) {
+    this.selection = selections[0] ?? new MockSelection({ line: 0, character: 0 }, { line: 0, character: 0 });
+  }
 
   setDecorations(_decorationType: any, _ranges: MockRange[]): void {
+    // Mock implementation
+  }
+
+  revealRange(_range: MockRange, _revealType?: unknown): void {
     // Mock implementation
   }
 }
@@ -215,6 +223,8 @@ export const window = {
   activeColorTheme: {
     kind: ColorThemeKind.Dark,
   },
+  showInformationMessage: jest.fn(),
+  showTextDocument: jest.fn(async (document: MockTextDocument) => new MockTextEditor(document, [])),
   onDidChangeActiveTextEditor: () => ({ dispose: () => {} }),
   onDidChangeTextEditorSelection: () => ({ dispose: () => {} }),
   onDidChangeActiveColorTheme: () => ({ dispose: () => {} }),
@@ -238,6 +248,11 @@ export const workspace = {
   onDidChangeConfiguration: () => ({ dispose: () => {} }),
   onDidRenameFiles: () => ({ dispose: () => {} }),
   applyEdit: jest.fn().mockResolvedValue(true),
+  openTextDocument: jest.fn(async (uri: ReturnType<typeof Uri.file>) => new MockTextDocument(uri, "markdown", 1, "")),
+  asRelativePath: jest.fn((uri: { toString?: () => string } | string) => {
+    const value = typeof uri === "string" ? uri : uri.toString?.() ?? "";
+    return value.replace(/^file:\/\/\/?/, "");
+  }),
   getConfiguration: (section?: string) => ({
     get: <T>(key: string, defaultValue: T): T => {
       // Return default value for all configuration keys in tests
@@ -300,7 +315,22 @@ export const CancellationToken = class {
 
 export const commands = {
   executeCommand: jest.fn(),
+  registerCommand: jest.fn((_command: string, _handler: (...args: any[]) => any) => ({ dispose: jest.fn() })),
 };
+
+export const extensions = {
+  getExtension: jest.fn(),
+};
+
+export const languages = {
+  registerDocumentLinkProvider: jest.fn((_selector: unknown, _provider: unknown) => ({ dispose: jest.fn() })),
+  registerHoverProvider: jest.fn((_selector: unknown, _provider: unknown) => ({ dispose: jest.fn() })),
+};
+
+export enum TextEditorRevealType {
+  Default = 0,
+  InCenter = 1,
+}
 
 export enum TextEditorSelectionChangeKind {
   Mouse = 1,

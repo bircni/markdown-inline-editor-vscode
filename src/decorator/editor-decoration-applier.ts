@@ -1,5 +1,5 @@
 import { DecorationOptions, Range, TextDocument, TextEditor } from 'vscode';
-import type { DecorationRange, DecorationType, ScopeRange } from '../parser';
+import type { DecorationType, ScopeRange } from '../parser';
 import { mapNormalizedToOriginal } from '../position-mapping';
 import { config } from '../config';
 import type { DecorationTypeRegistry } from './decoration-type-registry';
