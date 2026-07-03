@@ -9,6 +9,8 @@ import type {
   Link,
   Image,
   Delete,
+  Definition,
+  LinkReference,
   Blockquote,
   ListItem,
   ThematicBreak,
@@ -51,6 +53,11 @@ import {
   processStrong as processStrongHelper,
 } from "./inline-formatting";
 import { processCodeBlock as processCodeBlockHelper } from "./code-blocks";
+import {
+  collectLinkDefinitions as collectLinkDefinitionsHelper,
+  processDefinition as processDefinitionHelper,
+  processLinkReference as processLinkReferenceHelper,
+} from "./link-references";
 import {
   processBlockquote as processBlockquoteHelper,
   processListItem as processListItemHelper,
@@ -228,6 +235,7 @@ export class MarkdownParser {
   ): void {
     // Track processed blockquote positions to avoid duplicates from nested blockquotes
     const processedBlockquotePositions = new Set<number>();
+    const linkDefinitions = collectLinkDefinitionsHelper(ast);
 
     // Use a map to efficiently track ancestors for each node
     const ancestorMap = new Map<Node, Node[]>();
@@ -321,6 +329,26 @@ export class MarkdownParser {
                 decorations,
                 scopes,
                 currentAncestors,
+              );
+              break;
+
+            case "linkReference":
+              this.processLinkReference(
+                node as LinkReference,
+                text,
+                decorations,
+                scopes,
+                linkDefinitions,
+                currentAncestors,
+              );
+              break;
+
+            case "definition":
+              this.processDefinition(
+                node as Definition,
+                text,
+                decorations,
+                scopes,
               );
               break;
 
@@ -606,6 +634,26 @@ export class MarkdownParser {
     mermaidBlocks: MermaidBlock[],
   ): void {
     processCodeBlockHelper(node, text, decorations, scopes, mermaidBlocks);
+  }
+
+  private processDefinition(
+    node: Definition,
+    text: string,
+    decorations: DecorationRange[],
+    scopes: ScopeRange[],
+  ): void {
+    processDefinitionHelper(node, text, decorations, scopes);
+  }
+
+  private processLinkReference(
+    node: LinkReference,
+    text: string,
+    decorations: DecorationRange[],
+    scopes: ScopeRange[],
+    definitionUrls: Map<string, string>,
+    ancestors: Node[],
+  ): void {
+    processLinkReferenceHelper(node, text, decorations, scopes, definitionUrls, ancestors);
   }
 
   /**

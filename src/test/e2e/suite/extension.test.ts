@@ -1154,6 +1154,83 @@ suite('Extension E2E', () => {
       'Expected heading1 decoration in cache after inserting "# Heading"'
     );
   });
+
+  // ── Feature regressions (#122, #124) ─────────────────────────────────────
+
+  test('#124 — parse: [text][ref] reference link resolves URL from definition', async () => {
+    assert.ok(cache, 'parseCache not available from ext.exports');
+    const markdown = '[like][this]\n\n[this]: https://target.for/this';
+    const doc = await vscode.workspace.openTextDocument({ language: 'markdown', content: markdown });
+    await vscode.window.showTextDocument(doc);
+    await delay(400);
+
+    const entry = cache.get(doc);
+    const linkDec = entry.decorations.find((d) => d.type === 'link');
+    assert.ok(linkDec, 'Expected a link decoration for reference-style link');
+    assert.strictEqual(linkDec.url, 'https://target.for/this');
+
+    const refSyntaxHidden = entry.decorations.some(
+      (d) => d.type === 'hide' && d.startPos === 6 && d.endPos === 12,
+    );
+    assert.ok(refSyntaxHidden, 'Expected [this] reference syntax to be hidden');
+
+    const definitionHidden = entry.decorations.some(
+      (d) => d.type === 'hide' && d.startPos === markdown.indexOf('[this]:'),
+    );
+    assert.ok(definitionHidden, 'Expected link reference definition line to be hidden');
+  });
+
+  test('#124 — parse: [like this][] shortcut reference link resolves URL', async () => {
+    assert.ok(cache, 'parseCache not available from ext.exports');
+    const markdown = '[like this][]\n\n[like this]: https://example.com/page';
+    const doc = await vscode.workspace.openTextDocument({ language: 'markdown', content: markdown });
+    await vscode.window.showTextDocument(doc);
+    await delay(400);
+
+    const entry = cache.get(doc);
+    const linkDec = entry.decorations.find((d) => d.type === 'link');
+    assert.ok(linkDec, 'Expected shortcut reference link decoration');
+    assert.strictEqual(linkDec.url, 'https://example.com/page');
+  });
+
+  test('#122 — parse: heading {#attribute-list} suffix is hidden from styling', async () => {
+    assert.ok(cache, 'parseCache not available from ext.exports');
+    const markdown = '## This is a long heading {#shorter-name}';
+    const doc = await vscode.workspace.openTextDocument({ language: 'markdown', content: markdown });
+    await vscode.window.showTextDocument(doc);
+    await delay(400);
+
+    const entry = cache.get(doc);
+    const attrStart = markdown.indexOf(' {#shorter-name}');
+    assert.ok(
+      entry.decorations.some((d) => d.type === 'hide' && d.startPos === attrStart),
+      'Expected attribute list suffix to be hidden'
+    );
+    assert.ok(
+      entry.decorations.some((d) => d.type === 'heading2' && d.endPos === attrStart),
+      'Heading styling should exclude attribute list suffix'
+    );
+  });
+
+  test('#122/#124 — feature markdown decorates without error', async () => {
+    const doc = await vscode.workspace.openTextDocument({
+      language: 'markdown',
+      content: [
+        '## Section title {#section-id}',
+        '',
+        'Use a [reference][ref] instead of a long URL.',
+        '',
+        '[ref]: https://example.com/docs/reference',
+        '',
+        'Shortcut [implicit][] form below.',
+        '',
+        '[implicit]: https://example.com/implicit',
+      ].join('\n'),
+    });
+    await vscode.window.showTextDocument(doc);
+    await delay(600);
+    assert.strictEqual(doc.languageId, 'markdown');
+  });
 });
 
 function delay(ms: number): Promise<void> {

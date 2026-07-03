@@ -286,7 +286,7 @@
     "package": "vsce package --out dist/extension.vsix",
     "build": "npm run copy:mermaid && npm run compile && npm run bundle:prod && npm run package",
     "build:dev": "npm run compile && npm run bundle && npm run package",
-    "validate": "npm run lint:docs && npm test && npm run build",
+    "validate": "npm run lint:docs && npm run lint && npm test && npm run build",
     "compile:e2e": "tsc -p tsconfig.e2e.json",
     "release": "node scripts/release.js",
     "prepublishOnly": "npm run clean && npm run build"

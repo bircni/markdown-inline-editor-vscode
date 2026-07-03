@@ -45,9 +45,10 @@ export function processHeading(
   const hideEnd = contentStart + whitespaceLength;
   decorations.push({ startPos: start, endPos: hideEnd, type: 'hide' });
 
-  let contentEnd = end;
-  while (contentEnd > hideEnd && /\s/.test(text[contentEnd - 1])) {
-    contentEnd--;
+  const { contentEnd, attributeStart } = splitHeadingAttributeSuffix(text, hideEnd, end);
+
+  if (attributeStart !== null && attributeStart < end) {
+    decorations.push({ startPos: attributeStart, endPos: end, type: 'hide' });
   }
 
   if (hideEnd < contentEnd) {
@@ -56,6 +57,31 @@ export function processHeading(
   }
 
   addScope(scopes, start, contentEnd, 'heading');
+}
+
+/** Pandoc-style attribute suffix, e.g. `{#id}` or `{#id .class}`. */
+function splitHeadingAttributeSuffix(
+  text: string,
+  hideEnd: number,
+  end: number,
+): { contentEnd: number; attributeStart: number | null } {
+  let contentEnd = end;
+  while (contentEnd > hideEnd && /\s/.test(text[contentEnd - 1])) {
+    contentEnd--;
+  }
+
+  const visible = text.slice(hideEnd, contentEnd);
+  const match = visible.match(/^(.*?)(\s+\{[^}]+\})$/);
+  if (!match) {
+    return { contentEnd, attributeStart: null };
+  }
+
+  const trimmedVisibleEnd = hideEnd + match[1].length;
+  const attributeStart = hideEnd + match[1].length;
+  return {
+    contentEnd: trimmedVisibleEnd,
+    attributeStart,
+  };
 }
 
 export function processStrong(
